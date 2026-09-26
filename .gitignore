@@ -1,0 +1,11 @@
+# Secrets: .env is bundled into the app (public keys only); never commit either file.
+.env
+supabase/.env.secret
+supabase/.temp/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins-dependencies
+build/
+*.iml
+.idea/

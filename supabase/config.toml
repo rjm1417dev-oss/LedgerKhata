@@ -1,0 +1,13 @@
+# Supabase CLI project. Migrations in supabase/migrations run in filename order,
+# like Laravel/php migrations:
+#   npx supabase login
+#   npx supabase link --project-ref <ref>     # ref = the subdomain in SUPABASE_URL
+#   npx supabase db push                      # apply pending migrations
+#   npx supabase migration new <name>         # create the next migration file
+project_id = "ledgerkhata"
+
+[db]
+major_version = 17
+
+[db.migrations]
+enabled = true
