@@ -81,6 +81,28 @@ class SecondaryButton extends StatelessWidget {
   }
 }
 
+/// Full-width destructive action, e.g. the confirm dialog's "Delete" button
+/// and any other button that ends a session or removes data outright.
+class DestructiveButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+
+  const DestructiveButton({super.key, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Pressable(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(14)),
+        child: Text(label, style: AppTypography.text(size: 15, weight: FontWeight.w700, color: Colors.white)),
+      ),
+    );
+  }
+}
+
 /// Small pill primary button with a leading icon, e.g. "New Khata".
 class PrimaryButtonSmall extends StatelessWidget {
   final String label;
@@ -148,12 +170,16 @@ class IconButtonSoft extends StatelessWidget {
   }
 }
 
-/// Ghost / sunken icon button, e.g. back and close affordances.
+/// Ghost / sunken icon button, e.g. back and close affordances. [color] and
+/// [backgroundColor] override the default ink-on-transparent/sunken look,
+/// e.g. for a colored delete or edit affordance.
 class IconButtonGhost extends StatelessWidget {
   final AppIconGlyph icon;
   final VoidCallback? onTap;
   final String semanticLabel;
   final bool sunken;
+  final Color? color;
+  final Color? backgroundColor;
 
   const IconButtonGhost({
     super.key,
@@ -161,6 +187,8 @@ class IconButtonGhost extends StatelessWidget {
     required this.onTap,
     required this.semanticLabel,
     this.sunken = false,
+    this.color,
+    this.backgroundColor,
   });
 
   @override
@@ -174,10 +202,10 @@ class IconButtonGhost extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: sunken ? AppColors.surfaceSunken : Colors.transparent,
+            color: backgroundColor ?? (sunken ? AppColors.surfaceSunken : Colors.transparent),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Center(child: AppIcon(icon, size: sunken ? 20 : 24, color: AppColors.ink2, strokeWidth: 2)),
+          child: Center(child: AppIcon(icon, size: sunken ? 20 : 24, color: color ?? AppColors.ink2, strokeWidth: 2)),
         ),
       ),
     );

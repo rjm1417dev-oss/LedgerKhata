@@ -1,23 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/khata.dart';
 import '../state/app_state.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../widgets/app_icon.dart';
+import '../widgets/badges.dart';
 import '../widgets/buttons.dart';
 import '../widgets/cards.dart';
 import '../widgets/empty_state.dart';
 import 'add_khata_screen.dart';
+import 'record_payment_sheet.dart';
 
-class KhataListScreen extends StatelessWidget {
+class KhataListScreen extends StatefulWidget {
   const KhataListScreen({super.key});
+
+  @override
+  State<KhataListScreen> createState() => _KhataListScreenState();
+}
+
+class _KhataListScreenState extends State<KhataListScreen> {
+  DateTime? _month;
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    final khatas = state.khatas;
+    final allKhatas = state.khatas;
     final business = state.business;
+    final months = monthsIn(allKhatas);
+    final khatas = allKhatas.where((k) => k.inMonth(_month)).toList();
 
     return ColoredBox(
       color: AppColors.paper,
@@ -46,7 +58,7 @@ class KhataListScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: khatas.isEmpty
+            child: allKhatas.isEmpty
                 ? EmptyState(
                     icon: AppIconGlyph.khata,
                     title: 'No khatas yet',
@@ -57,10 +69,26 @@ class KhataListScreen extends StatelessWidget {
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     children: [
+                      if (months.length > 1) ...[
+                        MonthFilterBar(months: months, selected: _month, onChanged: (m) => setState(() => _month = m)),
+                        const SizedBox(height: 14),
+                      ],
                       Text('${khatas.length} khata${khatas.length == 1 ? '' : 's'}', style: AppTypography.caption),
                       const SizedBox(height: 12),
-                      for (final k in khatas)
-                        Padding(padding: const EdgeInsets.only(bottom: 12), child: KhataCard(khata: k)),
+                      if (khatas.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 32),
+                          child: Text('No khatas that month.', style: AppTypography.meta, textAlign: TextAlign.center),
+                        )
+                      else
+                        for (final k in khatas)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: KhataCard(
+                              khata: k,
+                              onRecordPayment: k.isSettled ? null : () => showRecordPaymentSheet(context, k),
+                            ),
+                          ),
                     ],
                   ),
           ),

@@ -8,6 +8,7 @@ import '../theme/app_typography.dart';
 import 'avatar.dart';
 import 'badges.dart';
 import 'app_icon.dart';
+import 'buttons.dart';
 
 String formatMoney(num n) => 'Rs ${NumberFormat('#,###').format(n.round())}';
 String formatSignedMoney(num n) => n < 0 ? '−${formatMoney(-n)}' : formatMoney(n);
@@ -23,7 +24,10 @@ class KhataCard extends StatelessWidget {
   /// Header row only (avatar, name, date, badge), as on the dashboard.
   final bool compact;
 
-  const KhataCard({super.key, required this.khata, this.onTap, this.compact = false});
+  /// Shows a "Record payment" action for a due (unsettled) khata.
+  final VoidCallback? onRecordPayment;
+
+  const KhataCard({super.key, required this.khata, this.onTap, this.compact = false, this.onRecordPayment});
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +91,10 @@ class KhataCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onRecordPayment != null) ...[
+                const SizedBox(height: 12),
+                PrimaryButtonSmall(label: 'Record payment', icon: AppIconGlyph.add, onTap: onRecordPayment),
+              ],
             ],
           ],
         ),

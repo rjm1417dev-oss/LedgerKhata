@@ -1,8 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_first_app/data/khata_repository.dart';
 import 'package:my_first_app/main.dart';
 import 'package:my_first_app/models/business.dart';
+import 'package:my_first_app/models/khata.dart';
 import 'package:my_first_app/screens/status_screens.dart';
 import 'package:my_first_app/state/app_state.dart';
 
@@ -98,10 +101,18 @@ void main() {
     await state.start();
     expect(state.status, AppStatus.ready);
 
-    final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 1650);
-    final oil = await state.addItem(name: 'Cooking Oil 1L', price: 560);
+    final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+    final oil = await state.addItem(name: 'Cooking Oil 1L', price: 560, unit: 'piece');
     final ahmed = await state.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
-    await state.addKhata(customer: ahmed, selectedItems: [rice, oil], discount: 65, paid: 1500);
+    await state.addKhata(
+      customer: ahmed,
+      selectedItems: [
+        SelectedKhataItem(item: rice, quantity: 1),
+        SelectedKhataItem(item: oil, quantity: 1),
+      ],
+      discount: 65,
+      paid: 1500,
+    );
 
     expect(state.totalBilled, 2210);
     expect(state.totalDiscount, 65);
@@ -111,13 +122,133 @@ void main() {
     expect(state.khatas.single.customerInitials, 'AR');
   });
 
+  test('AppState: a second purchase for the same customer lands on their open khata, not a new one', () async {
+    final repo = FakeRepository(signedIn: true, business: _business);
+    final state = AppState(repo, splashMinimum: Duration.zero);
+    await state.start();
+
+    final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+    final oil = await state.addItem(name: 'Cooking Oil 1L', price: 560, unit: 'piece');
+    final ahmed = await state.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+
+    repo.now = DateTime(2026, 9, 1);
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: rice, quantity: 1)], discount: 0, paid: 0);
+    expect(state.khatas, hasLength(1));
+
+    repo.now = DateTime(2026, 9, 10);
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: oil, quantity: 1)], discount: 0, paid: 0);
+
+    // Still one khata (cycle) — the second purchase became a new row on it.
+    expect(state.khatas, hasLength(1));
+    final khata = state.khatas.single;
+    expect(khata.items, hasLength(2));
+    expect(khata.total, 2210);
+    expect(khata.items[0].date, DateTime(2026, 9, 1));
+    expect(khata.items[1].date, DateTime(2026, 9, 10));
+  });
+
+  test('AppState: once a khata is fully paid, the next purchase starts a new cycle', () async {
+    final repo = FakeRepository(signedIn: true, business: _business);
+    final state = AppState(repo, splashMinimum: Duration.zero);
+    await state.start();
+
+    final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+    final sugar = await state.addItem(name: 'Sugar', price: 100, unit: 'kg');
+    final ahmed = await state.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: rice, quantity: 1)], discount: 0, paid: 1650);
+    expect(state.khatas.single.isSettled, isTrue);
+
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: sugar, quantity: 2)], discount: 0, paid: 0);
+
+    // A second, separate cycle — the first stays settled and untouched.
+    expect(state.khatas, hasLength(2));
+    final settled = state.khatas.firstWhere((k) => k.isSettled);
+    final open = state.khatas.firstWhere((k) => !k.isSettled);
+    expect(settled.items.single.name, 'Basmati Rice 5kg');
+    expect(open.items.single.name, 'Sugar');
+    expect(open.total, 200);
+  });
+
+  test('AppState: recording a payment reduces the remaining balance and can settle the khata', () async {
+    final repo = FakeRepository(signedIn: true, business: _business);
+    final state = AppState(repo, splashMinimum: Duration.zero);
+    await state.start();
+
+    final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+    final ahmed = await state.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: rice, quantity: 1)], discount: 0, paid: 0);
+    final khataId = state.khatas.single.id;
+
+    await state.recordKhataPayment(khataId: khataId, amount: 1000);
+    expect(state.khatas.single.paid, 1000);
+    expect(state.khatas.single.remaining, 650);
+    expect(state.khatas.single.isSettled, isFalse);
+    expect(state.khatas.single.payments.single.amount, 1000);
+
+    await state.recordKhataPayment(khataId: khataId, amount: 650);
+    expect(state.khatas.single.remaining, 0);
+    expect(state.khatas.single.isSettled, isTrue);
+    expect(state.khatas.single.payments, hasLength(2));
+  });
+
+  test('AppState: a payment larger than the remaining balance is rejected', () async {
+    final repo = FakeRepository(signedIn: true, business: _business);
+    final state = AppState(repo, splashMinimum: Duration.zero);
+    await state.start();
+
+    final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+    final ahmed = await state.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: rice, quantity: 1)], discount: 0, paid: 0);
+    final khataId = state.khatas.single.id;
+
+    await expectLater(
+      state.recordKhataPayment(khataId: khataId, amount: 2000),
+      throwsA(isA<RepositoryException>()),
+    );
+    expect(state.khatas.single.paid, 0);
+  });
+
+  test('AppState: updating business details persists name, owner, phone, address and contact number', () async {
+    final repo = FakeRepository(signedIn: true, business: _business);
+    final state = AppState(repo, splashMinimum: Duration.zero);
+    await state.start();
+    expect(state.business?.address, isNull);
+
+    await state.updateBusiness(
+      name: 'Al-Noor Traders Ltd',
+      ownerName: 'Bilal A. Khan',
+      phone: '0300 1122335',
+      address: 'Shop 4, Main Bazaar, Lahore',
+      contactNumber: '0321 9876543',
+    );
+
+    expect(state.business?.name, 'Al-Noor Traders Ltd');
+    expect(state.business?.ownerName, 'Bilal A. Khan');
+    expect(state.business?.phone, '0300 1122335');
+    expect(state.business?.address, 'Shop 4, Main Bazaar, Lahore');
+    expect(state.business?.contactNumber, '0321 9876543');
+  });
+
+  test('AppState: uploading a business logo updates the stored URL without touching other fields', () async {
+    final repo = FakeRepository(signedIn: true, business: _business);
+    final state = AppState(repo, splashMinimum: Duration.zero);
+    await state.start();
+    expect(state.business?.logoUrl, isNull);
+
+    await state.uploadBusinessLogo(bytes: Uint8List.fromList([1, 2, 3]), fileExtension: 'png');
+
+    expect(state.business?.logoUrl, isNotNull);
+    expect(state.business?.name, _business.name);
+  });
+
   test('AppState: backend errors surface as RepositoryException and keep state intact', () async {
     final repo = FakeRepository(signedIn: true, business: _business);
     final state = AppState(repo, splashMinimum: Duration.zero);
     await state.start();
 
     repo.failNextWrite = const RepositoryException('No internet connection. Check your network and try again.');
-    await expectLater(state.addItem(name: 'Sugar 1kg', price: 155), throwsA(isA<RepositoryException>()));
+    await expectLater(state.addItem(name: 'Sugar 1kg', price: 155, unit: 'kg'), throwsA(isA<RepositoryException>()));
     expect(state.items, isEmpty);
   });
 

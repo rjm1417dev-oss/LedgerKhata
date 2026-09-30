@@ -39,6 +39,7 @@ class AppColors {
   static const due = Color(0xFF8A3F0B);
   static const dueSoft = Color(0xFFFBEEDD);
   static const error = Color(0xFFB42318);
+  static const errorSoft = Color(0xFFFBEAE8);
   static const scrim = Color(0x7A121614); // rgba(18,22,20,.48)
 
   // Misc

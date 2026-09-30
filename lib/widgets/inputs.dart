@@ -153,6 +153,58 @@ class MoneyField extends StatelessWidget {
   }
 }
 
+/// Labelled dropdown for picking a unit (kg, piece, litre, ...).
+class UnitField extends StatelessWidget {
+  final String label;
+  final String? value;
+  final List<String> options;
+  final String? error;
+  final ValueChanged<String?> onChanged;
+
+  const UnitField({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.options,
+    this.error,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasError = error != null && error!.isNotEmpty;
+    final borderColor = hasError ? AppColors.error : AppColors.borderInput;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTypography.label),
+        const SizedBox(height: 6),
+        Container(
+          height: AppSpacing.fieldHeight,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            border: Border.all(color: borderColor, width: 1.5),
+            borderRadius: BorderRadius.circular(AppRadius.r12),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              icon: const AppIcon(AppIconGlyph.expand, size: 18, color: AppColors.muted, strokeWidth: 2),
+              hint: Text('Select unit', style: AppTypography.text(size: 15, color: AppColors.chevron)),
+              style: AppTypography.text(size: 15, weight: FontWeight.w600),
+              items: [for (final u in options) DropdownMenuItem(value: u, child: Text(u))],
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+        _ErrorLine(error),
+      ],
+    );
+  }
+}
+
 /// Search field with a leading search icon.
 class AppSearchField extends StatelessWidget {
   final String label;

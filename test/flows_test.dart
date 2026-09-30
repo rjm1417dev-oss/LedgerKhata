@@ -63,7 +63,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Basmati Rice 5kg'), findsOneWidget);
-    expect(find.text('Rs 1,650'), findsOneWidget);
+    expect(find.text('Rs 1,650 / piece'), findsOneWidget);
     expect(find.text('Basmati Rice 5kg added'), findsOneWidget);
     await settleToasts(tester);
   });
@@ -94,8 +94,8 @@ void main() {
 
   testWidgets('create a khata end to end with the money rules', (tester) async {
     await pumpSignedIn(tester, seed: (repo) async {
-      await repo.addItem(name: 'Basmati Rice 5kg', price: 1650);
-      await repo.addItem(name: 'Cooking Oil 1L', price: 560);
+      await repo.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+      await repo.addItem(name: 'Cooking Oil 1L', price: 560, unit: 'piece');
       await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
     });
 
@@ -153,10 +153,18 @@ void main() {
 
   testWidgets('dashboard shows compact recent khatas and View all opens the Khata tab', (tester) async {
     await pumpSignedIn(tester, seed: (repo) async {
-      final rice = await repo.addItem(name: 'Basmati Rice 5kg', price: 1650);
-      final oil = await repo.addItem(name: 'Cooking Oil 1L', price: 560);
+      final rice = await repo.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+      final oil = await repo.addItem(name: 'Cooking Oil 1L', price: 560, unit: 'piece');
       final ahmed = await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
-      await repo.createKhata(customerId: ahmed.id, itemIds: [rice.id, oil.id], discount: 65, paid: 1500);
+      await repo.createKhata(
+        customerId: ahmed.id,
+        items: [
+          KhataItemSelection(itemId: rice.id, quantity: 1),
+          KhataItemSelection(itemId: oil.id, quantity: 1),
+        ],
+        discount: 65,
+        paid: 1500,
+      );
     });
 
     // Hero, tiles and the compact recent card.
@@ -171,5 +179,222 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Paid'), findsOneWidget);
     expect(find.text('Rs 1,500'), findsOneWidget);
+  });
+
+  testWidgets('edit an item from the list', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      await repo.addItem(name: 'Sugar', price: 100, unit: 'kg');
+    });
+    await openTab(tester, 'Items');
+
+    await tester.tap(find.text('Sugar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit item'), findsOneWidget);
+
+    final priceField = find.byType(TextField).at(1);
+    await tester.enterText(priceField, '150');
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sugar updated'), findsOneWidget);
+    expect(find.text('Rs 150 / kg'), findsOneWidget);
+    await settleToasts(tester);
+  });
+
+  testWidgets('delete an item shows a confirm dialog before removing it', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      await repo.addItem(name: 'Sugar', price: 100, unit: 'kg');
+    });
+    await openTab(tester, 'Items');
+
+    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Delete Sugar?'), findsOneWidget);
+    expect(find.text('This can’t be undone.'), findsOneWidget);
+
+    // Cancel leaves the item in place.
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sugar'), findsOneWidget);
+
+    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sugar'), findsNothing);
+    expect(find.text('Sugar deleted'), findsOneWidget);
+    await settleToasts(tester);
+  });
+
+  testWidgets('deleting an item used in a khata warns how many khatas reference it', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      final sugar = await repo.addItem(name: 'Sugar', price: 100, unit: 'kg');
+      final ahmed = await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+      await repo.createKhata(
+        customerId: ahmed.id,
+        items: [KhataItemSelection(itemId: sugar.id, quantity: 2)],
+        discount: 0,
+        paid: 0,
+      );
+    });
+    await openTab(tester, 'Items');
+
+    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Used in 1 khata'), findsOneWidget);
+  });
+
+  testWidgets('edit a customer from their detail page', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+    });
+    await openTab(tester, 'Customers');
+
+    await tester.tap(find.text('Ahmed Raza'));
+    await tester.pumpAndSettle();
+    expect(find.text('0300 1234567'), findsOneWidget); // now on the detail page
+
+    // Header icons in order: back, edit, close.
+    await tester.tap(find.byType(IconButtonGhost).at(1));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit customer'), findsOneWidget);
+
+    final nameField = find.byType(TextField).at(0);
+    await tester.enterText(nameField, 'Ahmed Khan');
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ahmed Khan updated'), findsOneWidget);
+    expect(find.text('Ahmed Khan'), findsOneWidget);
+    await settleToasts(tester);
+  });
+
+  testWidgets('the close icon on the detail page just goes back', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+    });
+    await openTab(tester, 'Customers');
+
+    await tester.tap(find.text('Ahmed Raza'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(IconButtonGhost).last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 customer'), findsOneWidget); // back on the list, untouched
+    expect(find.text('Ahmed Raza'), findsOneWidget);
+  });
+
+  testWidgets('delete a customer with no khatas via the confirm dialog', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+    });
+    await openTab(tester, 'Customers');
+
+    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Delete Ahmed Raza?'), findsOneWidget);
+
+    await tester.tap(find.text('Delete'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No customers yet'), findsOneWidget);
+    expect(find.text('Ahmed Raza'), findsNothing);
+    expect(find.text('Ahmed Raza deleted'), findsOneWidget);
+    await settleToasts(tester);
+  });
+
+  testWidgets('deleting a customer with khatas is blocked with an explanatory dialog', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      final rice = await repo.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+      final ahmed = await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+      await repo.createKhata(
+        customerId: ahmed.id,
+        items: [KhataItemSelection(itemId: rice.id, quantity: 1)],
+        discount: 0,
+        paid: 0,
+      );
+    });
+    await openTab(tester, 'Customers');
+
+    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Can’t delete Ahmed Raza'), findsOneWidget);
+    expect(find.textContaining('has 1 khata on record'), findsOneWidget);
+
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+    // Still on the list, customer untouched.
+    expect(find.text('Ahmed Raza'), findsOneWidget);
+  });
+
+  testWidgets('customer detail page shows their khata history and records a payment', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      final rice = await repo.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+      final ahmed = await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+      await repo.createKhata(
+        customerId: ahmed.id,
+        items: [KhataItemSelection(itemId: rice.id, quantity: 1)],
+        discount: 0,
+        paid: 0,
+      );
+    });
+    await openTab(tester, 'Customers');
+
+    await tester.tap(find.text('Ahmed Raza'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Basmati Rice 5kg'), findsWidgets);
+    expect(find.text('Rs 1,650 due'), findsOneWidget);
+    expect(find.widgetWithText(PrimaryButtonSmall, 'Record payment'), findsOneWidget);
+
+    await tester.tap(find.text('Record payment'));
+    await tester.pumpAndSettle();
+
+    final amountField = find.byType(TextField).last;
+    await tester.enterText(amountField, '1650');
+    await tester.tap(find.widgetWithText(PrimaryButton, 'Record payment'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rs 1,650 recorded for Ahmed Raza'), findsOneWidget);
+    await settleToasts(tester);
+
+    // Back on the detail page, the cycle is now settled.
+    expect(find.text('Settled'), findsOneWidget);
+    expect(find.widgetWithText(PrimaryButtonSmall, 'Record payment'), findsNothing);
+  });
+
+  testWidgets('edit business details from Settings', (tester) async {
+    await pumpSignedIn(tester);
+    await openTab(tester, 'Settings');
+
+    expect(find.text('Not set'), findsNWidgets(2)); // Address, Public contact number
+
+    await tester.tap(find.byType(IconButtonGhost));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit business'), findsOneWidget);
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(3), 'Shop 4, Main Bazaar, Lahore');
+    await tester.enterText(fields.at(4), '0321 9876543');
+    await tester.tap(find.text('Save changes'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Business details updated'), findsOneWidget);
+    expect(find.text('Shop 4, Main Bazaar, Lahore'), findsOneWidget);
+    expect(find.text('0321 9876543'), findsOneWidget);
+    await settleToasts(tester);
+  });
+
+  testWidgets('signing out lands on the sign in screen, not register', (tester) async {
+    await pumpSignedIn(tester);
+    await openTab(tester, 'Settings');
+
+    await tester.tap(find.text('Sign out'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Create account'), findsNothing);
   });
 }

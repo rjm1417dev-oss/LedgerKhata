@@ -3,16 +3,19 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../data/khata_repository.dart';
+import '../models/customer.dart';
 import '../state/app_state.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../widgets/app_bottom_sheet.dart';
+import '../widgets/app_dialog.dart';
 import '../widgets/app_icon.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/buttons.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/inputs.dart';
 import '../widgets/list_rows.dart';
+import 'customer_detail_screen.dart';
 import 'validators.dart';
 
 class CustomersScreen extends StatelessWidget {
@@ -22,8 +25,31 @@ class CustomersScreen extends StatelessWidget {
     showAppBottomSheet(
       context: context,
       title: 'Add customer',
-      builder: (sheetContext) => const _AddCustomerForm(),
+      builder: (sheetContext) => const CustomerForm(),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, Customer customer) async {
+    final state = context.read<AppState>();
+    final count = state.khataCountForCustomer(customer.id);
+    if (count > 0) {
+      await showAppAlertDialog(
+        context: context,
+        title: 'Can’t delete ${customer.name}',
+        message:
+            '${customer.name} has ${count == 1 ? '1 khata' : '$count khatas'} on record. '
+            'Delete those khatas first if you still want to remove this customer.',
+      );
+      return;
+    }
+    final confirmed = await showAppConfirmDialog(context: context, title: 'Delete ${customer.name}?', message: 'This can’t be undone.');
+    if (!confirmed) return;
+    try {
+      await state.deleteCustomer(customer.id);
+      if (context.mounted) showAppToast(context, '${customer.name} deleted');
+    } on RepositoryException catch (e) {
+      if (context.mounted) showAppToast(context, e.message, isError: true);
+    }
   }
 
   @override
@@ -84,6 +110,10 @@ class CustomersScreen extends StatelessWidget {
                                 name: customers[i].name,
                                 phone: customers[i].phone,
                                 showDivider: i != customers.length - 1,
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (_) => CustomerDetailScreen(customerId: customers[i].id)),
+                                ),
+                                onDelete: () => _confirmDelete(context, customers[i]),
                               ),
                           ],
                         ),
@@ -97,18 +127,32 @@ class CustomersScreen extends StatelessWidget {
   }
 }
 
-class _AddCustomerForm extends StatefulWidget {
-  const _AddCustomerForm();
+/// Add/edit form shared with [CustomerDetailScreen]'s "Edit" action.
+class CustomerForm extends StatefulWidget {
+  final Customer? existing;
+  const CustomerForm({super.key, this.existing});
 
   @override
-  State<_AddCustomerForm> createState() => _AddCustomerFormState();
+  State<CustomerForm> createState() => CustomerFormState();
 }
 
-class _AddCustomerFormState extends State<_AddCustomerForm> {
+class CustomerFormState extends State<CustomerForm> {
   final _name = TextEditingController();
   final _phone = TextEditingController();
   bool _tried = false;
   bool _saving = false;
+
+  bool get _isEdit => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final existing = widget.existing;
+    if (existing != null) {
+      _name.text = existing.name;
+      _phone.text = existing.phone;
+    }
+  }
 
   String? get _nameError => _tried && _name.text.trim().isEmpty ? 'Enter the customer name' : null;
   String? get _phoneError => _tried ? phoneError(_phone.text) : null;
@@ -122,11 +166,17 @@ class _AddCustomerFormState extends State<_AddCustomerForm> {
     FocusScope.of(context).unfocus();
     setState(() => _saving = true);
     final name = _name.text.trim();
+    final phone = _phone.text.trim();
     try {
-      await context.read<AppState>().addCustomer(name: name, phone: _phone.text.trim());
-      if (!mounted) return;
-      showAppToast(context, '$name added');
-      Navigator.of(context).pop();
+      final state = context.read<AppState>();
+      if (_isEdit) {
+        await state.updateCustomer(id: widget.existing!.id, name: name, phone: phone);
+        if (mounted) showAppToast(context, '$name updated');
+      } else {
+        await state.addCustomer(name: name, phone: phone);
+        if (mounted) showAppToast(context, '$name added');
+      }
+      if (mounted) Navigator.of(context).pop();
     } on RepositoryException catch (e) {
       if (mounted) showAppToast(context, e.message, isError: true);
     } finally {
@@ -169,7 +219,7 @@ class _AddCustomerFormState extends State<_AddCustomerForm> {
           children: [
             Expanded(child: SecondaryButton(label: 'Cancel', onTap: () => Navigator.of(context).pop())),
             const SizedBox(width: 10),
-            Expanded(child: PrimaryButton(label: 'Save customer', onTap: _save, loading: _saving)),
+            Expanded(child: PrimaryButton(label: _isEdit ? 'Save changes' : 'Save customer', onTap: _save, loading: _saving)),
           ],
         ),
       ],

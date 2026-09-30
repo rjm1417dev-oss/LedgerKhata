@@ -20,7 +20,7 @@ class AuthGate extends StatelessWidget {
       case AppStatus.starting:
         return const SplashScreen();
       case AppStatus.signedOut:
-        return const _AuthFlow();
+        return _AuthFlow(startOnLogin: state.cameFromSignOut);
       case AppStatus.loadFailed:
         return LoadErrorScreen(
           message: state.loadError ?? 'Something went wrong. Please try again.',
@@ -34,15 +34,24 @@ class AuthGate extends StatelessWidget {
 }
 
 class _AuthFlow extends StatefulWidget {
-  const _AuthFlow();
+  /// True to open on Sign in instead of Register — set after an explicit
+  /// sign-out, since that user already has an account.
+  final bool startOnLogin;
+  const _AuthFlow({this.startOnLogin = false});
 
   @override
   State<_AuthFlow> createState() => _AuthFlowState();
 }
 
 class _AuthFlowState extends State<_AuthFlow> {
-  bool _register = true;
+  late bool _register;
   String? _notice;
+
+  @override
+  void initState() {
+    super.initState();
+    _register = !widget.startOnLogin;
+  }
 
   @override
   Widget build(BuildContext context) {
