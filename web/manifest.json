@@ -1,11 +1,11 @@
 {
-    "name": "my_first_app",
-    "short_name": "my_first_app",
+    "name": "Khata - Simple Digital Ledger",
+    "short_name": "Khata",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Track customer accounts, payments, and balances with Khata.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

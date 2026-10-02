@@ -3,6 +3,11 @@
 supabase/.env.secret
 supabase/.temp/
 
+# Android release signing credentials
+android/key.properties
+android/app/*.jks
+android/app/*.keystore
+
 # Flutter / Dart
 .dart_tool/
 .flutter-plugins-dependencies
