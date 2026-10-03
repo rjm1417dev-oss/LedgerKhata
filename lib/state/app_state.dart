@@ -216,14 +216,25 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> recordKhataPayment({required String khataId, required double amount}) async {
-    await _repo.recordKhataPayment(khataId: khataId, amount: amount);
+  Future<void> recordCustomerPayment({required String customerId, required double amount}) async {
+    await _repo.recordCustomerPayment(customerId: customerId, amount: amount);
     _khatas = await _repo.fetchKhatas();
     notifyListeners();
   }
 
   List<Khata> khatasForCustomer(String customerId) =>
       _khatas.where((k) => k.customerId == customerId).toList();
+
+  /// What a customer still owes across all their khatas (never negative).
+  double outstandingForCustomer(String customerId) =>
+      khatasForCustomer(customerId).fold(0.0, (a, k) => a + (k.remaining > 0 ? k.remaining : 0));
+
+  /// Customers with an unpaid balance, largest first.
+  List<Customer> get customersWithOutstanding {
+    final owing = _customers.where((c) => outstandingForCustomer(c.id) > 0).toList();
+    owing.sort((a, b) => outstandingForCustomer(b.id).compareTo(outstandingForCustomer(a.id)));
+    return owing;
+  }
 
   // Dashboard aggregates
   double get totalBilled => _khatas.fold(0.0, (a, k) => a + k.total);

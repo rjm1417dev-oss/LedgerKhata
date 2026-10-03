@@ -170,29 +170,40 @@ void main() {
     expect(open.total, 200);
   });
 
-  test('AppState: recording a payment reduces the remaining balance and can settle the khata', () async {
+  test('AppState: clearing a customer khata spreads the payment oldest first and keeps every record', () async {
     final repo = FakeRepository(signedIn: true, business: _business);
     final state = AppState(repo, splashMinimum: Duration.zero);
     await state.start();
 
-    final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+    final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 5000, unit: 'piece');
+    final oil = await state.addItem(name: 'Cooking Oil 1L', price: 3000, unit: 'piece');
+    final sugar = await state.addItem(name: 'Sugar', price: 1000, unit: 'kg');
     final ahmed = await state.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+
+    // Three purchases on one open khata cycle: 5,000 + 3,000 + 1,000 = 9,000.
+    repo.now = DateTime(2026, 9, 1);
     await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: rice, quantity: 1)], discount: 0, paid: 0);
-    final khataId = state.khatas.single.id;
+    repo.now = DateTime(2026, 9, 8);
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: oil, quantity: 1)], discount: 0, paid: 0);
+    repo.now = DateTime(2026, 9, 20);
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: sugar, quantity: 1)], discount: 0, paid: 0);
+    expect(state.outstandingForCustomer(ahmed.id), 9000);
 
-    await state.recordKhataPayment(khataId: khataId, amount: 1000);
-    expect(state.khatas.single.paid, 1000);
-    expect(state.khatas.single.remaining, 650);
-    expect(state.khatas.single.isSettled, isFalse);
-    expect(state.khatas.single.payments.single.amount, 1000);
+    await state.recordCustomerPayment(customerId: ahmed.id, amount: 4000);
+    expect(state.outstandingForCustomer(ahmed.id), 5000);
+    final cycle = state.khatas.single;
+    expect(cycle.paid, 4000);
+    expect(cycle.payments.single.amount, 4000);
 
-    await state.recordKhataPayment(khataId: khataId, amount: 650);
-    expect(state.khatas.single.remaining, 0);
+    await state.recordCustomerPayment(customerId: ahmed.id, amount: 5000);
+    expect(state.outstandingForCustomer(ahmed.id), 0);
+    expect(state.customersWithOutstanding, isEmpty);
+    // The purchase lines are still there as history.
+    expect(state.khatas.single.items, hasLength(3));
     expect(state.khatas.single.isSettled, isTrue);
-    expect(state.khatas.single.payments, hasLength(2));
   });
 
-  test('AppState: a payment larger than the remaining balance is rejected', () async {
+  test('AppState: clearing across two open khatas pays the older one first', () async {
     final repo = FakeRepository(signedIn: true, business: _business);
     final state = AppState(repo, splashMinimum: Duration.zero);
     await state.start();
@@ -200,13 +211,31 @@ void main() {
     final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
     final ahmed = await state.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
     await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: rice, quantity: 1)], discount: 0, paid: 0);
-    final khataId = state.khatas.single.id;
+    // Settle the first cycle, so the next purchase opens a second one.
+    await state.recordCustomerPayment(customerId: ahmed.id, amount: 1650);
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: rice, quantity: 1)], discount: 0, paid: 0);
+    expect(state.khatas, hasLength(2));
+
+    await state.recordCustomerPayment(customerId: ahmed.id, amount: 100);
+    final open = state.khatas.firstWhere((k) => !k.isSettled);
+    expect(open.paid, 100);
+    expect(state.outstandingForCustomer(ahmed.id), 1550);
+  });
+
+  test('AppState: a payment larger than the outstanding amount is rejected', () async {
+    final repo = FakeRepository(signedIn: true, business: _business);
+    final state = AppState(repo, splashMinimum: Duration.zero);
+    await state.start();
+
+    final rice = await state.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+    final ahmed = await state.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+    await state.addKhata(customer: ahmed, selectedItems: [SelectedKhataItem(item: rice, quantity: 1)], discount: 0, paid: 0);
 
     await expectLater(
-      state.recordKhataPayment(khataId: khataId, amount: 2000),
+      state.recordCustomerPayment(customerId: ahmed.id, amount: 2000),
       throwsA(isA<RepositoryException>()),
     );
-    expect(state.khatas.single.paid, 0);
+    expect(state.outstandingForCustomer(ahmed.id), 1650);
   });
 
   test('AppState: updating business details persists name, owner, phone, address and contact number', () async {

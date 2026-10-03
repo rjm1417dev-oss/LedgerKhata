@@ -350,9 +350,9 @@ class SupabaseKhataRepository implements KhataRepository {
   }
 
   @override
-  Future<void> recordKhataPayment({required String khataId, required double amount}) {
+  Future<void> recordCustomerPayment({required String customerId, required double amount}) {
     return _guard(() async {
-      await _db.rpc('record_khata_payment', params: {'p_khata_id': khataId, 'p_amount': amount});
+      await _db.rpc('record_customer_payment', params: {'p_customer_id': customerId, 'p_amount': amount});
     });
   }
 }

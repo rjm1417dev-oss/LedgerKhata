@@ -205,6 +205,60 @@ class UnitField extends StatelessWidget {
   }
 }
 
+/// Labelled dropdown over any list of options, styled like [UnitField].
+class SelectField<T> extends StatelessWidget {
+  final String label;
+  final String hint;
+  final T? value;
+  final List<DropdownMenuItem<T>> items;
+  final String? error;
+  final ValueChanged<T?> onChanged;
+
+  const SelectField({
+    super.key,
+    required this.label,
+    required this.hint,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    this.error,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasError = error != null && error!.isNotEmpty;
+    final borderColor = hasError ? AppColors.error : AppColors.borderInput;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTypography.label),
+        const SizedBox(height: 6),
+        Container(
+          height: AppSpacing.fieldHeight,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            border: Border.all(color: borderColor, width: 1.5),
+            borderRadius: BorderRadius.circular(AppRadius.r12),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<T>(
+              value: value,
+              isExpanded: true,
+              icon: const AppIcon(AppIconGlyph.expand, size: 18, color: AppColors.muted, strokeWidth: 2),
+              hint: Text(hint, style: AppTypography.text(size: 15, color: AppColors.chevron)),
+              style: AppTypography.text(size: 15, weight: FontWeight.w600),
+              items: items,
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+        _ErrorLine(error),
+      ],
+    );
+  }
+}
+
 /// Search field with a leading search icon.
 class AppSearchField extends StatelessWidget {
   final String label;

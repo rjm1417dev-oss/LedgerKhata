@@ -8,7 +8,6 @@ import '../theme/app_typography.dart';
 import 'avatar.dart';
 import 'badges.dart';
 import 'app_icon.dart';
-import 'buttons.dart';
 
 String formatMoney(num n) => 'Rs ${NumberFormat('#,###').format(n.round())}';
 String formatSignedMoney(num n) => n < 0 ? '−${formatMoney(-n)}' : formatMoney(n);
@@ -16,7 +15,7 @@ String formatDate(DateTime d) => DateFormat('d MMM yyyy').format(d);
 
 /// Khata summary card. Settled khatas collapse to a compact header row;
 /// khatas with a balance due show the item summary and total/discount/paid
-/// breakdown, per the DS "Khata card" spec.
+/// breakdown on the right. The dashboard uses [compact] for header-only rows.
 class KhataCard extends StatelessWidget {
   final Khata khata;
   final VoidCallback? onTap;
@@ -24,10 +23,10 @@ class KhataCard extends StatelessWidget {
   /// Header row only (avatar, name, date, badge), as on the dashboard.
   final bool compact;
 
-  /// Shows a "Record payment" action for a due (unsettled) khata.
-  final VoidCallback? onRecordPayment;
+  /// Shows the "Rs X due" badge on unsettled khatas.
+  final bool showDueBadge;
 
-  const KhataCard({super.key, required this.khata, this.onTap, this.compact = false, this.onRecordPayment});
+  const KhataCard({super.key, required this.khata, this.onTap, this.compact = false, this.showDueBadge = true});
 
   @override
   Widget build(BuildContext context) {
@@ -37,77 +36,68 @@ class KhataCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.r16),
       child: Container(
-        padding: EdgeInsets.all(settled ? 14 : 14),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColors.surface,
           border: Border.all(color: AppColors.line),
           borderRadius: BorderRadius.circular(AppRadius.r16),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                InitialsAvatar(initials: khata.customerInitials, size: 40),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(khata.customerName, style: AppTypography.text(size: 15, weight: FontWeight.w600)),
-                      const SizedBox(height: 2),
-                      Text(
-                        '${formatDate(khata.date)} · ${khata.items.length} item${khata.items.length == 1 ? '' : 's'}',
-                        style: AppTypography.meta,
-                      ),
-                    ],
+            InitialsAvatar(initials: khata.customerInitials, size: 40),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(khata.customerName, style: AppTypography.text(size: 15, weight: FontWeight.w600)),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${formatDate(khata.date)} · ${khata.items.length} item${khata.items.length == 1 ? '' : 's'}',
+                    style: AppTypography.meta,
                   ),
-                ),
-                const SizedBox(width: 12),
-                settled ? const SettledBadge() : DueBadge('${formatMoney(khata.remaining)} due'),
-              ],
-            ),
-            if (showDetails) ...[
-              const SizedBox(height: 12),
-              Text(
-                khata.itemsSummary,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.meta,
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.only(top: 12),
-                decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: AppColors.line, width: 1, style: BorderStyle.solid)),
-                ),
-                child: Row(
-                  children: [
-                    _totalCell('Total', formatMoney(khata.total)),
-                    _totalCell('Discount', formatMoney(khata.discount)),
-                    _totalCell('Paid', formatMoney(khata.paid)),
+                  if (showDetails) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      khata.itemsSummary,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.meta,
+                    ),
                   ],
-                ),
+                ],
               ),
-              if (onRecordPayment != null) ...[
-                const SizedBox(height: 12),
-                PrimaryButtonSmall(label: 'Record payment', icon: AppIconGlyph.add, onTap: onRecordPayment),
-              ],
-            ],
+            ),
+            const SizedBox(width: 12),
+            if (showDetails)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _totalLine('Total', formatMoney(khata.total)),
+                  _totalLine('Discount', formatMoney(khata.discount)),
+                  _totalLine('Paid', formatMoney(khata.paid)),
+                ],
+              )
+            else if (settled)
+              const SettledBadge()
+            else if (showDueBadge)
+              DueBadge('${formatMoney(khata.remaining)} due'),
           ],
         ),
       ),
     );
   }
 
-  Widget _totalCell(String label, String value) => Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _totalLine(String label, String value) => Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(label, style: AppTypography.text(size: 12, color: AppColors.muted)),
-            const SizedBox(height: 2),
+            const SizedBox(width: 8),
             Text(value, style: AppTypography.text(size: 14, weight: FontWeight.w600, tabular: true)),
           ],
         ),

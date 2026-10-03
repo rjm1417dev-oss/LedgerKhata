@@ -241,26 +241,36 @@ class FakeRepository implements KhataRepository {
   }
 
   @override
-  Future<void> recordKhataPayment({required String khataId, required double amount}) async {
+  Future<void> recordCustomerPayment({required String customerId, required double amount}) async {
     _maybeFail();
     if (amount <= 0) {
       throw const RepositoryException('Enter a payment amount greater than 0');
     }
-    final idx = _khatas.indexWhere((k) => k.id == khataId);
-    final existing = _khatas[idx];
-    if (existing.discount + existing.paid + amount > existing.total) {
-      throw const RepositoryException('That payment is more than the remaining amount.');
+    bool owes(Khata k) => k.customerId == customerId && k.remaining > 0;
+    final outstanding = _khatas.where(owes).fold(0.0, (a, k) => a + k.remaining);
+    if (outstanding <= 0) {
+      throw const RepositoryException('This customer has no outstanding khata');
     }
-    _khatas[idx] = Khata(
-      id: existing.id,
-      customerId: existing.customerId,
-      customerName: existing.customerName,
-      customerInitials: existing.customerInitials,
-      date: existing.date,
-      items: existing.items,
-      payments: [...existing.payments, KhataPayment(id: 'p${++_seq}', amount: amount, date: now)],
-      discount: existing.discount,
-      paid: existing.paid + amount,
-    );
+    if (amount > outstanding) {
+      throw RepositoryException('That payment is more than the outstanding amount (${outstanding.round()})');
+    }
+    var left = amount;
+    for (var idx = 0; idx < _khatas.length && left > 0; idx++) {
+      if (!owes(_khatas[idx])) continue;
+      final existing = _khatas[idx];
+      final apply = left < existing.remaining ? left : existing.remaining;
+      _khatas[idx] = Khata(
+        id: existing.id,
+        customerId: existing.customerId,
+        customerName: existing.customerName,
+        customerInitials: existing.customerInitials,
+        date: existing.date,
+        items: existing.items,
+        payments: [...existing.payments, KhataPayment(id: 'p${++_seq}', amount: apply, date: now)],
+        discount: existing.discount,
+        paid: existing.paid + apply,
+      );
+      left -= apply;
+    }
   }
 }

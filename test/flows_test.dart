@@ -148,7 +148,7 @@ void main() {
     // Back on the Khata tab the new khata is listed with its balance.
     await tester.tap(find.byType(IconButtonGhost).first);
     await tester.pumpAndSettle();
-    expect(find.text('Rs 645 due'), findsWidgets);
+    expect(find.text('Rs 645 due'), findsNothing); // due badge is hidden on the Khata tab
   });
 
   testWidgets('dashboard shows compact recent khatas and View all opens the Khata tab', (tester) async {
@@ -329,7 +329,7 @@ void main() {
     expect(find.text('Ahmed Raza'), findsOneWidget);
   });
 
-  testWidgets('customer detail page shows their khata history and records a payment', (tester) async {
+  testWidgets('customer detail page shows their khata history and clears the khata in one payment', (tester) async {
     await pumpSignedIn(tester, seed: (repo) async {
       final rice = await repo.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
       final ahmed = await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
@@ -346,23 +346,55 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Basmati Rice 5kg'), findsWidgets);
-    expect(find.text('Rs 1,650 due'), findsOneWidget);
-    expect(find.widgetWithText(PrimaryButtonSmall, 'Record payment'), findsOneWidget);
-
-    await tester.tap(find.text('Record payment'));
-    await tester.pumpAndSettle();
-
-    final amountField = find.byType(TextField).last;
-    await tester.enterText(amountField, '1650');
-    await tester.tap(find.widgetWithText(PrimaryButton, 'Record payment'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Rs 1,650 recorded for Ahmed Raza'), findsOneWidget);
-    await settleToasts(tester);
-
-    // Back on the detail page, the cycle is now settled.
-    expect(find.text('Settled'), findsOneWidget);
+    expect(find.text('Rs 1,650 due'), findsNothing); // no per-khata due badge on the detail page
+    expect(find.widgetWithText(PrimaryButtonSmall, 'Clear Khata'), findsOneWidget);
     expect(find.widgetWithText(PrimaryButtonSmall, 'Record payment'), findsNothing);
+
+    await tester.tap(find.widgetWithText(PrimaryButtonSmall, 'Clear Khata'));
+    await tester.pumpAndSettle();
+
+    // Customer is already known, so there is no picker; the full balance is pre-filled.
+    expect(find.text('Total outstanding'), findsOneWidget);
+    expect(find.text('Choose a customer'), findsNothing);
+    expect(find.text('1650'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(PrimaryButton, 'Clear Khata'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Khata cleared for Ahmed Raza'), findsOneWidget);
+    expect(find.text('Settled'), findsOneWidget);
+    expect(find.text('Rs 1,650 due'), findsNothing);
+    await settleToasts(tester);
+  });
+
+  testWidgets('Khata tab clears a khata by choosing the customer first', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      final rice = await repo.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+      final ahmed = await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+      await repo.createKhata(
+        customerId: ahmed.id,
+        items: [KhataItemSelection(itemId: rice.id, quantity: 1)],
+        discount: 0,
+        paid: 0,
+      );
+    });
+    await openTab(tester, 'Khata');
+
+    await tester.tap(find.widgetWithText(PrimaryButtonSmall, 'Clear Khata'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Choose a customer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ahmed Raza · Rs 1,650').last);
+    await tester.pumpAndSettle();
+    expect(find.text('Total outstanding'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(PrimaryButton, 'Clear Khata'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Khata cleared for Ahmed Raza'), findsOneWidget);
+    expect(find.text('Settled'), findsOneWidget);
+    await settleToasts(tester);
   });
 
   testWidgets('edit business details from Settings', (tester) async {
@@ -396,5 +428,24 @@ void main() {
 
     expect(find.text('Welcome back'), findsOneWidget);
     expect(find.text('Create account'), findsNothing);
+  });
+
+  testWidgets('dashboard shows Clear Khata and New Khata as equal-width buttons', (tester) async {
+    await pumpSignedIn(tester, seed: (repo) async {
+      final rice = await repo.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+      final ahmed = await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+      await repo.createKhata(customerId: ahmed.id, items: [KhataItemSelection(itemId: rice.id, quantity: 1)], discount: 0, paid: 0);
+    });
+
+    final clear = find.widgetWithText(PrimaryButtonSmall, 'Clear Khata');
+    final add = find.widgetWithText(PrimaryButtonSmall, 'New Khata');
+    expect(clear, findsOneWidget);
+    expect(add, findsOneWidget);
+    expect(tester.getSize(clear).width, tester.getSize(add).width);
+    expect(tester.getSize(clear).height, tester.getSize(add).height);
+
+    await tester.tap(add);
+    await tester.pumpAndSettle();
+    expect(find.text('New Khata'), findsWidgets); // the new khata screen opened
   });
 }

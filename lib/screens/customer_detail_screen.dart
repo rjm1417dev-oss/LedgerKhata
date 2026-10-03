@@ -16,7 +16,7 @@ import '../widgets/cards.dart';
 import '../widgets/empty_state.dart';
 import 'add_khata_screen.dart';
 import 'customers_screen.dart';
-import 'record_payment_sheet.dart';
+import 'clear_khata_sheet.dart';
 
 /// A customer's full khata history: every cycle they've had (open and
 /// settled), filterable by month, with an action to edit the customer and
@@ -124,6 +124,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   totalDiscount: allKhatas.fold(0.0, (a, k) => a + k.discount),
                   totalReceived: allKhatas.fold(0.0, (a, k) => a + k.paid),
                 ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: PrimaryButtonSmall(label: 'Clear Khata', icon: AppIconGlyph.selected, onTap: () => showClearKhataSheet(context, customerId: customer.id)),
+                ),
                 const SizedBox(height: 18),
                 if (months.length > 1) ...[
                   MonthFilterBar(months: months, selected: _month, onChanged: (m) => setState(() => _month = m)),
@@ -154,10 +159,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   for (final k in khatas)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _CycleCard(
-                        khata: k,
-                        onRecordPayment: k.isSettled ? null : () => showRecordPaymentSheet(context, k),
-                      ),
+                      child: _CycleCard(khata: k),
                     ),
                 ],
               ],
@@ -173,16 +175,14 @@ class _LedgerEntry {
   final DateTime date;
   final String label;
   final double amount;
-  final bool isPayment;
 
-  const _LedgerEntry({required this.date, required this.label, required this.amount, required this.isPayment});
+  const _LedgerEntry({required this.date, required this.label, required this.amount});
 }
 
 List<_LedgerEntry> _entriesFor(Khata k) {
-  final entries = <_LedgerEntry>[
+  final entries = [
     for (final i in k.items)
-      _LedgerEntry(date: i.date, label: '${i.name} · ${formatQuantity(i.quantity)} ${i.unit}', amount: i.lineTotal, isPayment: false),
-    for (final p in k.payments) _LedgerEntry(date: p.date, label: 'Payment received', amount: p.amount, isPayment: true),
+      _LedgerEntry(date: i.date, label: '${i.name} · ${formatQuantity(i.quantity)} ${i.unit}', amount: i.lineTotal),
   ];
   entries.sort((a, b) => a.date.compareTo(b.date));
   return entries;
@@ -192,9 +192,8 @@ List<_LedgerEntry> _entriesFor(Khata k) {
 /// they happened, followed by the running total/discount/paid breakdown.
 class _CycleCard extends StatelessWidget {
   final Khata khata;
-  final VoidCallback? onRecordPayment;
 
-  const _CycleCard({required this.khata, this.onRecordPayment});
+  const _CycleCard({required this.khata});
 
   @override
   Widget build(BuildContext context) {
@@ -218,7 +217,7 @@ class _CycleCard extends StatelessWidget {
                   style: AppTypography.text(size: 13, weight: FontWeight.w600, color: AppColors.muted),
                 ),
               ),
-              settled ? const SettledBadge() : DueBadge('${formatMoney(khata.remaining)} due'),
+              if (settled) const SettledBadge(),
             ],
           ),
           const SizedBox(height: 12),
@@ -237,10 +236,6 @@ class _CycleCard extends StatelessWidget {
               _totalCell('Paid', formatMoney(khata.paid)),
             ],
           ),
-          if (onRecordPayment != null) ...[
-            const SizedBox(height: 12),
-            PrimaryButtonSmall(label: 'Record payment', icon: AppIconGlyph.add, onTap: onRecordPayment),
-          ],
         ],
       ),
     );
@@ -258,15 +253,15 @@ class _CycleCard extends StatelessWidget {
             children: [
               Text(
                 e.label,
-                style: AppTypography.text(size: 13, weight: FontWeight.w600, color: e.isPayment ? AppColors.brand700 : AppColors.ink2),
+                style: AppTypography.text(size: 13, weight: FontWeight.w600, color: AppColors.ink2),
               ),
               Text(formatDate(e.date), style: AppTypography.text(size: 11, color: AppColors.muted)),
             ],
           ),
         ),
         Text(
-          e.isPayment ? '−${formatMoney(e.amount)}' : formatMoney(e.amount),
-          style: AppTypography.text(size: 13, weight: FontWeight.w700, color: e.isPayment ? AppColors.brand700 : AppColors.ink),
+          formatMoney(e.amount),
+          style: AppTypography.text(size: 13, weight: FontWeight.w700, color: AppColors.ink),
         ),
       ],
     ),

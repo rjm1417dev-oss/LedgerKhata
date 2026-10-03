@@ -80,6 +80,7 @@ abstract class KhataRepository {
     required double paid,
   });
 
-  /// Records a payment against a khata cycle, moving it toward settled.
-  Future<void> recordKhataPayment({required String khataId, required double amount});
+  /// Clears part or all of a customer's outstanding khata. The amount is
+  /// applied to their open khatas oldest first; the khata records stay as history.
+  Future<void> recordCustomerPayment({required String customerId, required double amount});
 }

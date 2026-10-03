@@ -11,6 +11,7 @@ import '../widgets/buttons.dart';
 import '../widgets/cards.dart';
 import '../widgets/empty_state.dart';
 import 'add_khata_screen.dart';
+import 'clear_khata_sheet.dart';
 
 /// Dashboard: header, remaining-balance hero, three count tiles and the three
 /// most recent khatas. Layout, spacing and type follow the "03 Dashboard"
@@ -67,6 +68,27 @@ class DashboardScreen extends StatelessWidget {
                   totalBilled: state.totalBilled,
                   totalDiscount: state.totalDiscount,
                   totalReceived: state.totalReceived,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: PrimaryButtonSmall(
+                        label: 'Clear Khata',
+                        icon: AppIconGlyph.selected,
+                        fullWidth: true,
+                        onTap: () => showClearKhataSheet(context),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: PrimaryButtonSmall(
+                        label: 'New Khata',
+                        fullWidth: true,
+                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddKhataScreen())),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Row(

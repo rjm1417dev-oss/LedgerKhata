@@ -11,7 +11,7 @@ import '../widgets/buttons.dart';
 import '../widgets/cards.dart';
 import '../widgets/empty_state.dart';
 import 'add_khata_screen.dart';
-import 'record_payment_sheet.dart';
+import 'clear_khata_sheet.dart';
 
 class KhataListScreen extends StatefulWidget {
   const KhataListScreen({super.key});
@@ -51,6 +51,12 @@ class _KhataListScreenState extends State<KhataListScreen> {
                   ),
                 ),
                 PrimaryButtonSmall(
+                  label: 'Clear Khata',
+                  icon: AppIconGlyph.selected,
+                  onTap: () => showClearKhataSheet(context),
+                ),
+                const SizedBox(width: 8),
+                PrimaryButtonSmall(
                   label: 'New Khata',
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddKhataScreen())),
                 ),
@@ -84,10 +90,7 @@ class _KhataListScreenState extends State<KhataListScreen> {
                         for (final k in khatas)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: KhataCard(
-                              khata: k,
-                              onRecordPayment: k.isSettled ? null : () => showRecordPaymentSheet(context, k),
-                            ),
+                            child: KhataCard(khata: k, showDueBadge: false),
                           ),
                     ],
                   ),

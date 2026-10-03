@@ -109,7 +109,16 @@ class PrimaryButtonSmall extends StatelessWidget {
   final VoidCallback? onTap;
   final AppIconGlyph icon;
 
-  const PrimaryButtonSmall({super.key, required this.label, required this.onTap, this.icon = AppIconGlyph.add});
+  /// Fills the space it is given, with the label centred (for equal-width pairs).
+  final bool fullWidth;
+
+  const PrimaryButtonSmall({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.icon = AppIconGlyph.add,
+    this.fullWidth = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +126,9 @@ class PrimaryButtonSmall extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 44,
-        padding: const EdgeInsets.only(left: 12, right: 16),
+        width: fullWidth ? double.infinity : null,
+        alignment: fullWidth ? Alignment.center : null,
+        padding: EdgeInsets.only(left: 12, right: fullWidth ? 12 : 16),
         decoration: BoxDecoration(color: AppColors.brand700, borderRadius: BorderRadius.circular(12)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
