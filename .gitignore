@@ -14,3 +14,7 @@ android/app/*.keystore
 build/
 *.iml
 .idea/
+
+# Signing
+*.jks
+key.properties
