@@ -14,8 +14,19 @@ class DueBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: AppColors.dueSoft, borderRadius: BorderRadius.circular(AppRadius.pill)),
-      child: Text(text, style: AppTypography.text(size: 13, weight: FontWeight.w700, color: AppColors.due, tabular: true)),
+      decoration: BoxDecoration(
+        color: AppColors.dueSoft,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Text(
+        text,
+        style: AppTypography.text(
+          size: 13,
+          weight: FontWeight.w700,
+          color: AppColors.due,
+          tabular: true,
+        ),
+      ),
     );
   }
 }
@@ -27,13 +38,28 @@ class SettledBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: AppColors.brand100, borderRadius: BorderRadius.circular(AppRadius.pill)),
+      decoration: BoxDecoration(
+        color: AppColors.brand100,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const AppIcon(AppIconGlyph.selected, size: 14, color: AppColors.brand700, strokeWidth: 2.4),
+          const AppIcon(
+            AppIconGlyph.selected,
+            size: 14,
+            color: AppColors.brand700,
+            strokeWidth: 2.4,
+          ),
           const SizedBox(width: 4),
-          Text('Settled', style: AppTypography.text(size: 13, weight: FontWeight.w700, color: AppColors.brand700)),
+          Text(
+            'Settled',
+            style: AppTypography.text(
+              size: 13,
+              weight: FontWeight.w700,
+              color: AppColors.brand700,
+            ),
+          ),
         ],
       ),
     );
@@ -47,7 +73,12 @@ class AppFilterChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const AppFilterChip({super.key, required this.label, required this.selected, required this.onTap});
+  const AppFilterChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -59,12 +90,19 @@ class AppFilterChip extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? AppColors.brand700 : AppColors.surface,
-          border: Border.all(color: selected ? AppColors.brand700 : AppColors.borderInput, width: 1.5),
+          border: Border.all(
+            color: selected ? AppColors.brand700 : AppColors.borderInput,
+            width: 1.5,
+          ),
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
           label,
-          style: AppTypography.text(size: 13, weight: FontWeight.w700, color: selected ? Colors.white : AppColors.ink2),
+          style: AppTypography.text(
+            size: 13,
+            weight: FontWeight.w700,
+            color: selected ? Colors.white : AppColors.ink2,
+          ),
         ),
       ),
     );
@@ -78,7 +116,12 @@ class MonthFilterBar extends StatelessWidget {
   final DateTime? selected;
   final ValueChanged<DateTime?> onChanged;
 
-  const MonthFilterBar({super.key, required this.months, required this.selected, required this.onChanged});
+  const MonthFilterBar({
+    super.key,
+    required this.months,
+    required this.selected,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -91,12 +134,19 @@ class MonthFilterBar extends StatelessWidget {
         separatorBuilder: (context, i) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           if (i == 0) {
-            return AppFilterChip(label: 'All time', selected: selected == null, onTap: () => onChanged(null));
+            return AppFilterChip(
+              label: 'All time',
+              selected: selected == null,
+              onTap: () => onChanged(null),
+            );
           }
           final month = months[i - 1];
           return AppFilterChip(
             label: _monthLabel(month),
-            selected: selected != null && selected!.year == month.year && selected!.month == month.month,
+            selected:
+                selected != null &&
+                selected!.year == month.year &&
+                selected!.month == month.month,
             onTap: () => onChanged(month),
           );
         },
@@ -105,10 +155,22 @@ class MonthFilterBar extends StatelessWidget {
   }
 
   static const _names = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', //
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec', //
   ];
 
-  String _monthLabel(DateTime month) => '${_names[month.month - 1]} ${month.year}';
+  String _monthLabel(DateTime month) =>
+      '${_names[month.month - 1]} ${month.year}';
 }
 
 class CountChip extends StatelessWidget {
@@ -119,8 +181,18 @@ class CountChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: AppColors.surfaceSunken, borderRadius: BorderRadius.circular(AppRadius.pill)),
-      child: Text(text, style: AppTypography.text(size: 12, weight: FontWeight.w700, color: AppColors.ink2)),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSunken,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Text(
+        text,
+        style: AppTypography.text(
+          size: 12,
+          weight: FontWeight.w700,
+          color: AppColors.ink2,
+        ),
+      ),
     );
   }
 }

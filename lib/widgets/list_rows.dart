@@ -35,7 +35,9 @@ class ItemRow extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minHeight: 60),
       decoration: BoxDecoration(
-        border: showDivider ? const Border(bottom: BorderSide(color: AppColors.divider)) : null,
+        border: showDivider
+            ? const Border(bottom: BorderSide(color: AppColors.divider))
+            : null,
       ),
       child: Row(
         children: [
@@ -43,21 +45,47 @@ class ItemRow extends StatelessWidget {
             child: Pressable(
               onTap: onTap,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     Container(
                       width: 38,
                       height: 38,
-                      decoration: BoxDecoration(color: AppColors.surfaceSunken, borderRadius: BorderRadius.circular(11)),
-                      child: const Center(child: AppIcon(AppIconGlyph.item, size: 18, color: AppColors.ink2, strokeWidth: 1.9)),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceSunken,
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: const Center(
+                        child: AppIcon(
+                          AppIconGlyph.item,
+                          size: 18,
+                          color: AppColors.ink2,
+                          strokeWidth: 1.9,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(name, style: AppTypography.text(size: 15, weight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        name,
+                        style: AppTypography.text(
+                          size: 15,
+                          weight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(width: 8),
-                    Text('${formatMoney(price)} / $unit', style: AppTypography.text(size: 15, weight: FontWeight.w700)),
+                    Text(
+                      '${formatMoney(price)} / $unit',
+                      style: AppTypography.text(
+                        size: 15,
+                        weight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -65,13 +93,13 @@ class ItemRow extends StatelessWidget {
           ),
           if (onDelete != null)
             IconButtonGhost(
-            icon: AppIconGlyph.delete,
-            onTap: onDelete,
-            semanticLabel: 'Delete $name',
-            sunken: true,
-            color: AppColors.error,
-            backgroundColor: AppColors.errorSoft,
-          ),
+              icon: AppIconGlyph.delete,
+              onTap: onDelete,
+              semanticLabel: 'Delete $name',
+              sunken: true,
+              color: AppColors.error,
+              backgroundColor: AppColors.errorSoft,
+            ),
           const SizedBox(width: 6),
         ],
       ),
@@ -105,7 +133,9 @@ class CustomerRow extends StatelessWidget {
     return Container(
       constraints: const BoxConstraints(minHeight: 64),
       decoration: BoxDecoration(
-        border: showDivider ? const Border(bottom: BorderSide(color: AppColors.divider)) : null,
+        border: showDivider
+            ? const Border(bottom: BorderSide(color: AppColors.divider))
+            : null,
       ),
       child: Row(
         children: [
@@ -113,7 +143,10 @@ class CustomerRow extends StatelessWidget {
             child: Pressable(
               onTap: onTap,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     InitialsAvatar(initials: initials, size: 40),
@@ -123,7 +156,14 @@ class CustomerRow extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(name, style: AppTypography.text(size: 15, weight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+                          Text(
+                            name,
+                            style: AppTypography.text(
+                              size: 15,
+                              weight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           Text(phone, style: AppTypography.meta),
                         ],
                       ),
@@ -135,13 +175,13 @@ class CustomerRow extends StatelessWidget {
           ),
           if (onDelete != null)
             IconButtonGhost(
-            icon: AppIconGlyph.delete,
-            onTap: onDelete,
-            semanticLabel: 'Delete $name',
-            sunken: true,
-            color: AppColors.error,
-            backgroundColor: AppColors.errorSoft,
-          ),
+              icon: AppIconGlyph.delete,
+              onTap: onDelete,
+              semanticLabel: 'Delete $name',
+              sunken: true,
+              color: AppColors.error,
+              backgroundColor: AppColors.errorSoft,
+            ),
           const SizedBox(width: 6),
         ],
       ),
@@ -184,14 +224,40 @@ class SelectableItemRow extends StatelessWidget {
               height: 22,
               decoration: BoxDecoration(
                 color: selected ? AppColors.brand700 : Colors.white,
-                border: Border.all(color: selected ? AppColors.brand700 : AppColors.borderControl, width: 1.5),
+                border: Border.all(
+                  color: selected
+                      ? AppColors.brand700
+                      : AppColors.borderControl,
+                  width: 1.5,
+                ),
                 borderRadius: BorderRadius.circular(7),
               ),
-              child: selected ? const Center(child: AppIcon(AppIconGlyph.selected, size: 15, color: Colors.white, strokeWidth: 3)) : null,
+              child: selected
+                  ? const Center(
+                      child: AppIcon(
+                        AppIconGlyph.selected,
+                        size: 15,
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
+                    )
+                  : null,
             ),
             const SizedBox(width: 12),
-            Expanded(child: Text(name, style: AppTypography.text(size: 15, weight: FontWeight.w500))),
-            Text('${formatMoney(price)} / $unit', style: AppTypography.text(size: 14, weight: FontWeight.w600, color: AppColors.ink2)),
+            Expanded(
+              child: Text(
+                name,
+                style: AppTypography.text(size: 15, weight: FontWeight.w500),
+              ),
+            ),
+            Text(
+              '${formatMoney(price)} / $unit',
+              style: AppTypography.text(
+                size: 14,
+                weight: FontWeight.w600,
+                color: AppColors.ink2,
+              ),
+            ),
           ],
         ),
       ),
@@ -237,12 +303,24 @@ class SelectableCustomerRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(name, style: AppTypography.text(size: 15, weight: FontWeight.w600)),
+                  Text(
+                    name,
+                    style: AppTypography.text(
+                      size: 15,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
                   Text(phone, style: AppTypography.meta),
                 ],
               ),
             ),
-            if (selected) const AppIcon(AppIconGlyph.selected, size: 20, color: AppColors.brand700, strokeWidth: 2.4),
+            if (selected)
+              const AppIcon(
+                AppIconGlyph.selected,
+                size: 20,
+                color: AppColors.brand700,
+                strokeWidth: 2.4,
+              ),
           ],
         ),
       ),
@@ -276,7 +354,9 @@ class SelectedItemRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.divider))),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -286,14 +366,33 @@ class SelectedItemRow extends StatelessWidget {
                 width: 26,
                 height: 26,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppColors.surfaceSunken, borderRadius: BorderRadius.circular(8)),
-                child: Text('$index', style: AppTypography.text(size: 12, weight: FontWeight.w700, color: AppColors.ink2)),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceSunken,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '$index',
+                  style: AppTypography.text(
+                    size: 12,
+                    weight: FontWeight.w700,
+                    color: AppColors.ink2,
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(name, style: AppTypography.text(size: 15, weight: FontWeight.w500), overflow: TextOverflow.ellipsis),
+                child: Text(
+                  name,
+                  style: AppTypography.text(size: 15, weight: FontWeight.w500),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              IconButtonGhost(icon: AppIconGlyph.close, onTap: onRemove, semanticLabel: 'Remove $name', sunken: true),
+              IconButtonGhost(
+                icon: AppIconGlyph.close,
+                onTap: onRemove,
+                semanticLabel: 'Remove $name',
+                sunken: true,
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -301,15 +400,28 @@ class SelectedItemRow extends StatelessWidget {
             padding: const EdgeInsets.only(left: 38),
             child: Row(
               children: [
-                Text('${formatMoney(price)} / $unit', style: AppTypography.text(size: 12, color: AppColors.muted)),
+                Text(
+                  '${formatMoney(price)} / $unit',
+                  style: AppTypography.text(size: 12, color: AppColors.muted),
+                ),
                 const Spacer(),
-                QuantityStepper(controller: quantityController, unit: unit, onChanged: onQuantityChanged),
+                QuantityStepper(
+                  controller: quantityController,
+                  unit: unit,
+                  onChanged: onQuantityChanged,
+                ),
                 const SizedBox(width: 10),
                 ValueListenableBuilder<TextEditingValue>(
                   valueListenable: quantityController,
                   builder: (context, value, _) {
                     final qty = double.tryParse(value.text) ?? 0;
-                    return Text(formatMoney(price * qty), style: AppTypography.text(size: 14, weight: FontWeight.w700));
+                    return Text(
+                      formatMoney(price * qty),
+                      style: AppTypography.text(
+                        size: 14,
+                        weight: FontWeight.w700,
+                      ),
+                    );
                   },
                 ),
               ],

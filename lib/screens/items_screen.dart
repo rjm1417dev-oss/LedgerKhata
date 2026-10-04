@@ -4,8 +4,9 @@ import 'package:provider/provider.dart';
 import '../data/khata_repository.dart';
 import '../models/item.dart';
 import '../state/app_state.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../widgets/rise_in.dart';
+import '../widgets/screen_header.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_icon.dart';
@@ -14,6 +15,7 @@ import '../widgets/buttons.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/inputs.dart';
 import '../widgets/list_rows.dart';
+import '../widgets/glass.dart';
 
 class ItemsScreen extends StatelessWidget {
   const ItemsScreen({super.key});
@@ -40,7 +42,11 @@ class ItemsScreen extends StatelessWidget {
     final message = usage == 0
         ? 'This can’t be undone.'
         : 'Used in ${usage == 1 ? '1 khata' : '$usage khatas'} — those records keep "${item.name}"\'s name, price and unit. This can’t be undone.';
-    final confirmed = await showAppConfirmDialog(context: context, title: 'Delete ${item.name}?', message: message);
+    final confirmed = await showAppConfirmDialog(
+      context: context,
+      title: 'Delete ${item.name}?',
+      message: message,
+    );
     if (!confirmed) return;
     try {
       await state.deleteItem(item.id);
@@ -56,29 +62,19 @@ class ItemsScreen extends StatelessWidget {
     final items = state.items;
     final business = state.business;
 
-    return ColoredBox(
-      color: AppColors.paper,
+    return AuroraBackground(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(business?.name ?? '', style: AppTypography.text(size: 13, weight: FontWeight.w600, color: AppColors.muted)),
-                      Text('Items', style: AppTypography.title),
-                    ],
-                  ),
-                ),
-                PrimaryButtonSmall(label: 'Add', icon: AppIconGlyph.add, onTap: () => _openAddSheet(context)),
-              ],
+          ScreenHeader(
+            businessName: business?.name ?? '',
+            title: 'Items',
+            trailing: PrimaryButtonSmall(
+              label: 'Add',
+              icon: AppIconGlyph.add,
+              onTap: () => _openAddSheet(context),
             ),
           ),
+
           Expanded(
             child: items.isEmpty
                 ? EmptyState(
@@ -91,25 +87,27 @@ class ItemsScreen extends StatelessWidget {
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     children: [
-                      Text('${items.length} item${items.length == 1 ? '' : 's'}', style: AppTypography.caption),
+                      Text(
+                        '${items.length} item${items.length == 1 ? '' : 's'}',
+                        style: AppTypography.caption,
+                      ),
                       const SizedBox(height: 10),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          border: Border.all(color: AppColors.line),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        clipBehavior: Clip.hardEdge,
+                      GlassCard(
                         child: Column(
                           children: [
                             for (var i = 0; i < items.length; i++)
-                              ItemRow(
-                                name: items[i].name,
-                                price: items[i].price,
-                                unit: items[i].unit,
-                                showDivider: i != items.length - 1,
-                                onTap: () => _openEditSheet(context, items[i]),
-                                onDelete: () => _confirmDelete(context, items[i]),
+                              RiseIn(
+                                index: i,
+                                child: ItemRow(
+                                  name: items[i].name,
+                                  price: items[i].price,
+                                  unit: items[i].unit,
+                                  showDivider: i != items.length - 1,
+                                  onTap: () =>
+                                      _openEditSheet(context, items[i]),
+                                  onDelete: () =>
+                                      _confirmDelete(context, items[i]),
+                                ),
                               ),
                           ],
                         ),
@@ -155,7 +153,8 @@ class _ItemFormState extends State<_ItemForm> {
     }
   }
 
-  String? get _nameError => _tried && _name.text.trim().isEmpty ? 'Enter the item name' : null;
+  String? get _nameError =>
+      _tried && _name.text.trim().isEmpty ? 'Enter the item name' : null;
   String? get _priceError {
     if (!_tried) return null;
     final v = double.tryParse(_price.text) ?? 0;
@@ -168,7 +167,10 @@ class _ItemFormState extends State<_ItemForm> {
 
   Future<void> _save() async {
     if (_saving) return;
-    if (_name.text.trim().isEmpty || _priceError != null || _unit == null || (double.tryParse(_price.text) ?? 0) <= 0) {
+    if (_name.text.trim().isEmpty ||
+        _priceError != null ||
+        _unit == null ||
+        (double.tryParse(_price.text) ?? 0) <= 0) {
       setState(() => _tried = true);
       return;
     }
@@ -179,7 +181,12 @@ class _ItemFormState extends State<_ItemForm> {
     try {
       final state = context.read<AppState>();
       if (_isEdit) {
-        await state.updateItem(id: widget.existing!.id, name: name, price: price, unit: _unit!);
+        await state.updateItem(
+          id: widget.existing!.id,
+          name: name,
+          price: price,
+          unit: _unit!,
+        );
       } else {
         await state.addItem(name: name, price: price, unit: _unit!);
       }
@@ -231,9 +238,20 @@ class _ItemFormState extends State<_ItemForm> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: SecondaryButton(label: 'Cancel', onTap: () => Navigator.of(context).pop())),
+            Expanded(
+              child: SecondaryButton(
+                label: 'Cancel',
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: PrimaryButton(label: _isEdit ? 'Save changes' : 'Save item', onTap: _save, loading: _saving)),
+            Expanded(
+              child: PrimaryButton(
+                label: _isEdit ? 'Save changes' : 'Save item',
+                onTap: _save,
+                loading: _saving,
+              ),
+            ),
           ],
         ),
       ],

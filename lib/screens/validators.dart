@@ -11,6 +11,8 @@ String? phoneError(String v) {
 String? emailError(String v) {
   final e = v.trim();
   if (e.isEmpty) return 'Enter your email address';
-  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e)) return 'Enter a valid email address';
+  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e)) {
+    return 'Enter a valid email address';
+  }
   return null;
 }

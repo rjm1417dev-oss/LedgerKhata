@@ -38,17 +38,22 @@ const Map<AppIconGlyph, String> _paths = {
       '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
   AppIconGlyph.add: '<path d="M12 5v14M5 12h14"/>',
   AppIconGlyph.remove: '<path d="M5 12h14"/>',
-  AppIconGlyph.edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/>',
+  AppIconGlyph.edit:
+      '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/>',
   AppIconGlyph.delete:
       '<path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6M14 11v6"/>',
-  AppIconGlyph.search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  AppIconGlyph.search:
+      '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
   AppIconGlyph.expand: '<path d="m6 9 6 6 6-6"/>',
   AppIconGlyph.back: '<path d="M15 18l-6-6 6-6"/>',
-  AppIconGlyph.readonly: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  AppIconGlyph.readonly:
+      '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   AppIconGlyph.selected: '<path d="m5 12 5 5 9-10"/>',
   AppIconGlyph.close: '<path d="M6 6l12 12M18 6 6 18"/>',
-  AppIconGlyph.error: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16h.01"/>',
-  AppIconGlyph.success: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+  AppIconGlyph.error:
+      '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16h.01"/>',
+  AppIconGlyph.success:
+      '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
 };
 
 class AppIcon extends StatelessWidget {

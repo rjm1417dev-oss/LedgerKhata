@@ -5,8 +5,12 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'app_icon.dart';
 
-/// Top toast: dark surface, success check, 2.6s per the Feedback spec.
-void showAppToast(BuildContext context, String message, {bool isError = false}) {
+/// Top toast: dark glass with a success or error mark, 2.6s per the Feedback spec.
+void showAppToast(
+  BuildContext context,
+  String message, {
+  bool isError = false,
+}) {
   final overlay = Overlay.of(context);
   late OverlayEntry entry;
   entry = OverlayEntry(
@@ -24,7 +28,11 @@ class _ToastWidget extends StatefulWidget {
   final bool isError;
   final VoidCallback onDone;
 
-  const _ToastWidget({required this.message, required this.isError, required this.onDone});
+  const _ToastWidget({
+    required this.message,
+    required this.isError,
+    required this.onDone,
+  });
 
   @override
   State<_ToastWidget> createState() => _ToastWidgetState();
@@ -62,9 +70,15 @@ class _ToastWidgetState extends State<_ToastWidget> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.ink,
-                borderRadius: BorderRadius.circular(AppRadius.r14),
-                boxShadow: const [BoxShadow(color: Color(0x40161816), blurRadius: 32, offset: Offset(0, 12))],
+                color: const Color(0xD6161816),
+                borderRadius: BorderRadius.circular(AppRadius.r18),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x40161816),
+                    blurRadius: 32,
+                    offset: Offset(0, 12),
+                  ),
+                ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -72,14 +86,20 @@ class _ToastWidgetState extends State<_ToastWidget> {
                   AppIcon(
                     widget.isError ? AppIconGlyph.error : AppIconGlyph.success,
                     size: 20,
-                    color: widget.isError ? const Color(0xFFFF8A80) : AppColors.successCheck,
+                    color: widget.isError
+                        ? const Color(0xFFFF8A80)
+                        : AppColors.successCheck,
                     strokeWidth: 2,
                   ),
                   const SizedBox(width: 10),
                   Flexible(
                     child: Text(
                       widget.message,
-                      style: AppTypography.text(size: 14, weight: FontWeight.w600, color: Colors.white),
+                      style: AppTypography.text(
+                        size: 14,
+                        weight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ],

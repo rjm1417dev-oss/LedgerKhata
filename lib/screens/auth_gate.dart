@@ -63,7 +63,8 @@ class _AuthFlowState extends State<_AuthFlow> {
         }),
         onNeedsConfirmation: (email) => setState(() {
           _register = false;
-          _notice = 'We sent a confirmation link to $email. Open it, then sign in here.';
+          _notice =
+              'We sent a confirmation link to $email. Open it, then sign in here.';
         }),
       );
     }

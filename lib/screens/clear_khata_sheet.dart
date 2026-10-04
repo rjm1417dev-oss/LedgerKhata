@@ -52,7 +52,8 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
 
   AppState get _state => context.read<AppState>();
 
-  double get _outstanding => _customerId == null ? 0 : _state.outstandingForCustomer(_customerId!);
+  double get _outstanding =>
+      _customerId == null ? 0 : _state.outstandingForCustomer(_customerId!);
 
   /// Pre-fills the full outstanding amount so the common case is one tap.
   void _prefillAmount() {
@@ -60,13 +61,17 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
     _amount.text = owed > 0 ? owed.round().toString() : '';
   }
 
-  String? get _customerError => _tried && _customerId == null ? 'Select the customer whose khata you are clearing' : null;
+  String? get _customerError => _tried && _customerId == null
+      ? 'Select the customer whose khata you are clearing'
+      : null;
 
   String? get _amountError {
     if (!_tried || _customerId == null) return null;
     final v = double.tryParse(_amount.text) ?? 0;
     if (v <= 0) return 'Enter an amount greater than 0';
-    if (v > _outstanding) return 'Can’t be more than the outstanding amount (${formatMoney(_outstanding)})';
+    if (v > _outstanding) {
+      return 'Can’t be more than the outstanding amount (${formatMoney(_outstanding)})';
+    }
     return null;
   }
 
@@ -81,12 +86,19 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
     FocusScope.of(context).unfocus();
     setState(() => _saving = true);
     final state = context.read<AppState>();
-    final name = state.customers.where((c) => c.id == id).firstOrNull?.name ?? 'Customer';
+    final name =
+        state.customers.where((c) => c.id == id).firstOrNull?.name ??
+        'Customer';
     final clearing = amount >= _outstanding;
     try {
       await state.recordCustomerPayment(customerId: id, amount: amount);
       if (!mounted) return;
-      showAppToast(context, clearing ? 'Khata cleared for $name' : '${formatMoney(amount)} received from $name');
+      showAppToast(
+        context,
+        clearing
+            ? 'Khata cleared for $name'
+            : '${formatMoney(amount)} received from $name',
+      );
       Navigator.of(context).pop();
     } on RepositoryException catch (e) {
       if (mounted) showAppToast(context, e.message, isError: true);
@@ -99,7 +111,9 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     final owing = state.customersWithOutstanding;
-    final customer = _customerId == null ? null : state.customers.where((c) => c.id == _customerId).firstOrNull;
+    final customer = _customerId == null
+        ? null
+        : state.customers.where((c) => c.id == _customerId).firstOrNull;
     final outstanding = _outstanding;
 
     return Column(
@@ -109,12 +123,19 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
         if (widget.customerId == null) ...[
           SelectField<String>(
             label: 'Customer',
-            hint: owing.isEmpty ? 'No customers owe anything' : 'Choose a customer',
+            hint: owing.isEmpty
+                ? 'No customers owe anything'
+                : 'Choose a customer',
             value: _customerId,
             error: _customerError,
             items: [
               for (final Customer c in owing)
-                DropdownMenuItem(value: c.id, child: Text('${c.name} · ${formatMoney(state.outstandingForCustomer(c.id))}')),
+                DropdownMenuItem(
+                  value: c.id,
+                  child: Text(
+                    '${c.name} · ${formatMoney(state.outstandingForCustomer(c.id))}',
+                  ),
+                ),
             ],
             onChanged: (id) => setState(() {
               _customerId = id;
@@ -126,7 +147,10 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
         if (customer != null) ...[
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(color: AppColors.surfaceSubtle, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceSubtle,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -134,11 +158,24 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(customer.name, style: AppTypography.text(size: 14, weight: FontWeight.w600)),
+                    Text(
+                      customer.name,
+                      style: AppTypography.text(
+                        size: 14,
+                        weight: FontWeight.w600,
+                      ),
+                    ),
                     Text('Total outstanding', style: AppTypography.meta),
                   ],
                 ),
-                Text(formatMoney(outstanding), style: AppTypography.text(size: 20, weight: FontWeight.w700, color: AppColors.due)),
+                Text(
+                  formatMoney(outstanding),
+                  style: AppTypography.text(
+                    size: 20,
+                    weight: FontWeight.w700,
+                    color: AppColors.due,
+                  ),
+                ),
               ],
             ),
           ),
@@ -153,7 +190,12 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
         ],
         Row(
           children: [
-            Expanded(child: SecondaryButton(label: 'Cancel', onTap: () => Navigator.of(context).pop())),
+            Expanded(
+              child: SecondaryButton(
+                label: 'Cancel',
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: PrimaryButton(

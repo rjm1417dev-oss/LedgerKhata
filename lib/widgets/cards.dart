@@ -8,9 +8,11 @@ import '../theme/app_typography.dart';
 import 'avatar.dart';
 import 'badges.dart';
 import 'app_icon.dart';
+import 'glass.dart';
 
 String formatMoney(num n) => 'Rs ${NumberFormat('#,###').format(n.round())}';
-String formatSignedMoney(num n) => n < 0 ? '−${formatMoney(-n)}' : formatMoney(n);
+String formatSignedMoney(num n) =>
+    n < 0 ? '−${formatMoney(-n)}' : formatMoney(n);
 String formatDate(DateTime d) => DateFormat('d MMM yyyy').format(d);
 
 /// Khata summary card. Settled khatas collapse to a compact header row;
@@ -26,7 +28,13 @@ class KhataCard extends StatelessWidget {
   /// Shows the "Rs X due" badge on unsettled khatas.
   final bool showDueBadge;
 
-  const KhataCard({super.key, required this.khata, this.onTap, this.compact = false, this.showDueBadge = true});
+  const KhataCard({
+    super.key,
+    required this.khata,
+    this.onTap,
+    this.compact = false,
+    this.showDueBadge = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,13 +43,9 @@ class KhataCard extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.r16),
-      child: Container(
+      child: GlassCard(
+        radius: AppRadius.r18,
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.line),
-          borderRadius: BorderRadius.circular(AppRadius.r16),
-        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -52,7 +56,13 @@ class KhataCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(khata.customerName, style: AppTypography.text(size: 15, weight: FontWeight.w600)),
+                  Text(
+                    khata.customerName,
+                    style: AppTypography.text(
+                      size: 15,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     '${formatDate(khata.date)} · ${khata.items.length} item${khata.items.length == 1 ? '' : 's'}',
@@ -92,16 +102,26 @@ class KhataCard extends StatelessWidget {
   }
 
   Widget _totalLine(String label, String value) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(label, style: AppTypography.text(size: 12, color: AppColors.muted)),
-            const SizedBox(width: 8),
-            Text(value, style: AppTypography.text(size: 14, weight: FontWeight.w600, tabular: true)),
-          ],
+    padding: const EdgeInsets.only(bottom: 4),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: AppTypography.text(size: 12, color: AppColors.muted),
         ),
-      );
+        const SizedBox(width: 8),
+        Text(
+          value,
+          style: AppTypography.text(
+            size: 14,
+            weight: FontWeight.w600,
+            tabular: true,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Dashboard's remaining-balance hero card with the faint ruled-paper motif.
@@ -128,29 +148,63 @@ class BalanceHero extends StatelessWidget {
     return Container(
       clipBehavior: Clip.hardEdge,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.brand700, borderRadius: BorderRadius.circular(AppRadius.r22)),
+      decoration: BoxDecoration(
+        gradient: AppGradients.brand,
+        borderRadius: BorderRadius.circular(AppRadius.r28),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x4D0E5C45),
+            blurRadius: 28,
+            offset: Offset(0, 14),
+          ),
+        ],
+      ),
       child: Stack(
         children: [
           Positioned.fill(child: CustomPaint(painter: _RuledPagePainter())),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Total remaining', style: AppTypography.text(size: 13, weight: FontWeight.w600, color: AppColors.onBrand)),
-              const SizedBox(height: 4),
               Text(
-                formatMoney(totalRemaining),
-                style: AppTypography.display(size: 42, weight: FontWeight.w700, letterSpacing: -0.02, height: 1.1, color: AppColors.paper, tabular: true),
+                'Total remaining',
+                style: AppTypography.text(
+                  size: 13,
+                  weight: FontWeight.w600,
+                  color: AppColors.onBrand,
+                ),
+              ),
+              const SizedBox(height: 4),
+              TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: totalRemaining),
+                duration: const Duration(milliseconds: 1200),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) => Text(
+                  formatMoney(value),
+                  style: AppTypography.display(
+                    size: 42,
+                    weight: FontWeight.w700,
+                    letterSpacing: -0.02,
+                    height: 1.1,
+                    color: AppColors.paper,
+                    tabular: true,
+                  ),
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Pending on $pendingCount of $totalKhatas khatas',
-                style: AppTypography.text(size: 13, color: const Color(0xFFD5EAE1)),
+                style: AppTypography.text(
+                  size: 13,
+                  color: const Color(0xFFD5EAE1),
+                ),
               ),
               const SizedBox(height: 18),
               Container(
                 padding: const EdgeInsets.only(top: 16),
                 decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: Color(0x33F6F4EE), width: 1)),
+                  border: Border(
+                    top: BorderSide(color: Color(0x33F6F4EE), width: 1),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -168,15 +222,26 @@ class BalanceHero extends StatelessWidget {
   }
 
   Widget _stat(String label, String value) => Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(label, style: AppTypography.text(size: 12, color: AppColors.onBrand)),
-            const SizedBox(height: 3),
-            Text(value, style: AppTypography.text(size: 15, weight: FontWeight.w700, color: AppColors.paper, tabular: true)),
-          ],
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTypography.text(size: 12, color: AppColors.onBrand),
         ),
-      );
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: AppTypography.text(
+            size: 15,
+            weight: FontWeight.w700,
+            color: AppColors.paper,
+            tabular: true,
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _RuledPagePainter extends CustomPainter {
@@ -202,28 +267,47 @@ class StatTile extends StatelessWidget {
   final String value;
   final String label;
 
-  const StatTile({super.key, required this.icon, required this.value, required this.label});
+  const StatTile({
+    super.key,
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassCard(
+      radius: AppRadius.r18,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.line),
-        borderRadius: BorderRadius.circular(AppRadius.r16),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 34,
             height: 34,
-            decoration: BoxDecoration(color: AppColors.surfaceSunken, borderRadius: BorderRadius.circular(AppRadius.r10)),
-            child: Center(child: AppIcon(icon, size: 18, color: AppColors.ink2, strokeWidth: 1.9)),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceSunken,
+              borderRadius: BorderRadius.circular(AppRadius.r10),
+            ),
+            child: Center(
+              child: AppIcon(
+                icon,
+                size: 18,
+                color: AppColors.ink2,
+                strokeWidth: 1.9,
+              ),
+            ),
           ),
           const SizedBox(height: 10),
-          Text(value, style: AppTypography.display(size: 26, weight: FontWeight.w700, height: 1.1, tabular: true)),
+          Text(
+            value,
+            style: AppTypography.display(
+              size: 26,
+              weight: FontWeight.w700,
+              height: 1.1,
+              tabular: true,
+            ),
+          ),
           Text(label, style: AppTypography.meta),
         ],
       ),

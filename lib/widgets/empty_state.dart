@@ -32,22 +32,44 @@ class EmptyState extends StatelessWidget {
             Container(
               width: 72,
               height: 72,
-              decoration: BoxDecoration(color: AppColors.brand100, borderRadius: BorderRadius.circular(22)),
-              child: Center(child: AppIcon(icon, size: 34, color: AppColors.brand700, strokeWidth: 1.7)),
+              decoration: BoxDecoration(
+                color: AppColors.brand100,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Center(
+                child: AppIcon(
+                  icon,
+                  size: 34,
+                  color: AppColors.brand700,
+                  strokeWidth: 1.7,
+                ),
+              ),
             ),
             const SizedBox(height: 14),
-            Text(title, style: AppTypography.text(size: 19, weight: FontWeight.w700), textAlign: TextAlign.center),
+            Text(
+              title,
+              style: AppTypography.text(size: 19, weight: FontWeight.w700),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 260),
               child: Text(
                 message,
                 textAlign: TextAlign.center,
-                style: AppTypography.text(size: 14, height: 1.5, color: AppColors.muted),
+                style: AppTypography.text(
+                  size: 14,
+                  height: 1.5,
+                  color: AppColors.muted,
+                ),
               ),
             ),
             const SizedBox(height: 14),
-            PrimaryButtonSmall(label: actionLabel, onTap: onAction, icon: AppIconGlyph.add),
+            PrimaryButtonSmall(
+              label: actionLabel,
+              onTap: onAction,
+              icon: AppIconGlyph.add,
+            ),
           ],
         ),
       ),

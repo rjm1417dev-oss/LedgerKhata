@@ -17,6 +17,7 @@ import '../widgets/empty_state.dart';
 import 'add_khata_screen.dart';
 import 'customers_screen.dart';
 import 'clear_khata_sheet.dart';
+import '../widgets/glass.dart';
 
 /// A customer's full khata history: every cycle they've had (open and
 /// settled), filterable by month, with an action to edit the customer and
@@ -34,26 +35,44 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   DateTime? _month;
 
   void _openEditSheet(BuildContext context, Customer customer) {
-    showAppBottomSheet(context: context, title: 'Edit customer', builder: (_) => CustomerForm(existing: customer));
+    showAppBottomSheet(
+      context: context,
+      title: 'Edit customer',
+      builder: (_) => CustomerForm(existing: customer),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    final customer = state.customers.where((c) => c.id == widget.customerId).firstOrNull;
+    final customer = state.customers
+        .where((c) => c.id == widget.customerId)
+        .firstOrNull;
 
     if (customer == null) {
       return Scaffold(
         backgroundColor: AppColors.paper,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 16, 16, 10),
-            child: Row(
-              children: [
-                IconButtonGhost(icon: AppIconGlyph.back, onTap: () => Navigator.of(context).pop(), semanticLabel: 'Back to Customers'),
-                const SizedBox(width: 6),
-                Text('Customer not found', style: AppTypography.text(size: 16, weight: FontWeight.w600)),
-              ],
+        body: AuroraBackground(
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(8, 16, 16, 10),
+              child: Row(
+                children: [
+                  IconButtonGhost(
+                    icon: AppIconGlyph.back,
+                    onTap: () => Navigator.of(context).pop(),
+                    semanticLabel: 'Back to Customers',
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Customer not found',
+                    style: AppTypography.text(
+                      size: 16,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -65,107 +84,157 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     final months = monthsIn(allKhatas);
     final khatas = allKhatas.where((k) => k.inMonth(_month)).toList();
 
-    final totalRemaining = allKhatas.fold(0.0, (a, k) => a + (k.remaining > 0 ? k.remaining : 0));
+    final totalRemaining = allKhatas.fold(
+      0.0,
+      (a, k) => a + (k.remaining > 0 ? k.remaining : 0),
+    );
     final pendingCount = allKhatas.where((k) => !k.isSettled).length;
 
     return Scaffold(
       backgroundColor: AppColors.paper,
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 16, 16, 10),
-            child: Row(
-              children: [
-                IconButtonGhost(icon: AppIconGlyph.back, onTap: () => Navigator.of(context).pop(), semanticLabel: 'Back to Customers'),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(business?.name ?? '', style: AppTypography.text(size: 12, weight: FontWeight.w600, color: AppColors.muted)),
-                      Text(
-                        customer.name,
-                        style: AppTypography.display(size: 24, weight: FontWeight.w700, letterSpacing: -0.02),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+      body: AuroraBackground(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 16, 16, 10),
+              child: Row(
+                children: [
+                  IconButtonGhost(
+                    icon: AppIconGlyph.back,
+                    onTap: () => Navigator.of(context).pop(),
+                    semanticLabel: 'Back to Customers',
                   ),
-                ),
-                IconButtonGhost(
-                  icon: AppIconGlyph.edit,
-                  onTap: () => _openEditSheet(context, customer),
-                  semanticLabel: 'Edit ${customer.name}',
-                  color: AppColors.brand700,
-                  backgroundColor: AppColors.brand100,
-                ),
-                const SizedBox(width: 4),
-                IconButtonGhost(
-                  icon: AppIconGlyph.close,
-                  onTap: () => Navigator.of(context).pop(),
-                  semanticLabel: 'Close',
-                  color: AppColors.chevron,
-                  backgroundColor: AppColors.surfaceSunken,
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-              children: [
-                Text(customer.phone, style: AppTypography.text(size: 14, color: AppColors.muted)),
-                const SizedBox(height: 16),
-                BalanceHero(
-                  totalRemaining: totalRemaining,
-                  pendingCount: pendingCount,
-                  totalKhatas: allKhatas.length,
-                  totalBilled: allKhatas.fold(0.0, (a, k) => a + k.total),
-                  totalDiscount: allKhatas.fold(0.0, (a, k) => a + k.discount),
-                  totalReceived: allKhatas.fold(0.0, (a, k) => a + k.paid),
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: PrimaryButtonSmall(label: 'Clear Khata', icon: AppIconGlyph.selected, onTap: () => showClearKhataSheet(context, customerId: customer.id)),
-                ),
-                const SizedBox(height: 18),
-                if (months.length > 1) ...[
-                  MonthFilterBar(months: months, selected: _month, onChanged: (m) => setState(() => _month = m)),
-                  const SizedBox(height: 14),
-                ],
-                if (allKhatas.isEmpty)
-                  EmptyState(
-                    icon: AppIconGlyph.khata,
-                    title: 'No khatas yet',
-                    message: 'Add a khata for ${customer.name} to start tracking what they owe.',
-                    actionLabel: 'New Khata',
-                    onAction: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddKhataScreen())),
-                  )
-                else if (khatas.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32),
+                  const SizedBox(width: 6),
+                  Expanded(
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('No activity that month.', style: AppTypography.meta, textAlign: TextAlign.center),
-                        const SizedBox(height: 6),
-                        TextLinkButton(label: 'Show all time', onTap: () => setState(() => _month = null)),
+                        Text(
+                          business?.name ?? '',
+                          style: AppTypography.text(
+                            size: 12,
+                            weight: FontWeight.w600,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                        Text(
+                          customer.name,
+                          style: AppTypography.display(
+                            size: 24,
+                            weight: FontWeight.w700,
+                            letterSpacing: -0.02,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
-                  )
-                else ...[
-                  Text('${khatas.length} khata${khatas.length == 1 ? '' : 's'}', style: AppTypography.caption),
-                  const SizedBox(height: 10),
-                  for (final k in khatas)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _CycleCard(khata: k),
-                    ),
+                  ),
+                  IconButtonGhost(
+                    icon: AppIconGlyph.edit,
+                    onTap: () => _openEditSheet(context, customer),
+                    semanticLabel: 'Edit ${customer.name}',
+                    color: AppColors.brand700,
+                    backgroundColor: AppColors.brand100,
+                  ),
+                  const SizedBox(width: 4),
+                  IconButtonGhost(
+                    icon: AppIconGlyph.close,
+                    onTap: () => Navigator.of(context).pop(),
+                    semanticLabel: 'Close',
+                    color: AppColors.chevron,
+                    backgroundColor: AppColors.surfaceSunken,
+                  ),
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                children: [
+                  Text(
+                    customer.phone,
+                    style: AppTypography.text(size: 14, color: AppColors.muted),
+                  ),
+                  const SizedBox(height: 16),
+                  BalanceHero(
+                    totalRemaining: totalRemaining,
+                    pendingCount: pendingCount,
+                    totalKhatas: allKhatas.length,
+                    totalBilled: allKhatas.fold(0.0, (a, k) => a + k.total),
+                    totalDiscount: allKhatas.fold(
+                      0.0,
+                      (a, k) => a + k.discount,
+                    ),
+                    totalReceived: allKhatas.fold(0.0, (a, k) => a + k.paid),
+                  ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: PrimaryButtonSmall(
+                      label: 'Clear Khata',
+                      icon: AppIconGlyph.selected,
+                      onTap: () =>
+                          showClearKhataSheet(context, customerId: customer.id),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  if (months.length > 1) ...[
+                    MonthFilterBar(
+                      months: months,
+                      selected: _month,
+                      onChanged: (m) => setState(() => _month = m),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  if (allKhatas.isEmpty)
+                    EmptyState(
+                      icon: AppIconGlyph.khata,
+                      title: 'No khatas yet',
+                      message:
+                          'Add a khata for ${customer.name} to start tracking what they owe.',
+                      actionLabel: 'New Khata',
+                      onAction: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const AddKhataScreen(),
+                        ),
+                      ),
+                    )
+                  else if (khatas.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 32),
+                      child: Column(
+                        children: [
+                          Text(
+                            'No activity that month.',
+                            style: AppTypography.meta,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 6),
+                          TextLinkButton(
+                            label: 'Show all time',
+                            onTap: () => setState(() => _month = null),
+                          ),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    Text(
+                      '${khatas.length} khata${khatas.length == 1 ? '' : 's'}',
+                      style: AppTypography.caption,
+                    ),
+                    const SizedBox(height: 10),
+                    for (final k in khatas)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _CycleCard(khata: k),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -176,13 +245,21 @@ class _LedgerEntry {
   final String label;
   final double amount;
 
-  const _LedgerEntry({required this.date, required this.label, required this.amount});
+  const _LedgerEntry({
+    required this.date,
+    required this.label,
+    required this.amount,
+  });
 }
 
 List<_LedgerEntry> _entriesFor(Khata k) {
   final entries = [
     for (final i in k.items)
-      _LedgerEntry(date: i.date, label: '${i.name} · ${formatQuantity(i.quantity)} ${i.unit}', amount: i.lineTotal),
+      _LedgerEntry(
+        date: i.date,
+        label: '${i.name} · ${formatQuantity(i.quantity)} ${i.unit}',
+        amount: i.lineTotal,
+      ),
   ];
   entries.sort((a, b) => a.date.compareTo(b.date));
   return entries;
@@ -199,13 +276,9 @@ class _CycleCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final settled = khata.isSettled;
     final entries = _entriesFor(khata);
-    return Container(
+    return GlassCard(
+      radius: AppRadius.r18,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.line),
-        borderRadius: BorderRadius.circular(AppRadius.r16),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -214,7 +287,11 @@ class _CycleCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'Opened ${formatDate(khata.date)}',
-                  style: AppTypography.text(size: 13, weight: FontWeight.w600, color: AppColors.muted),
+                  style: AppTypography.text(
+                    size: 13,
+                    weight: FontWeight.w600,
+                    color: AppColors.muted,
+                  ),
                 ),
               ),
               if (settled) const SettledBadge(),
@@ -222,10 +299,16 @@ class _CycleCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Container(
-            decoration: BoxDecoration(color: AppColors.surfaceSubtle, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceSubtle,
+              borderRadius: BorderRadius.circular(12),
+            ),
             clipBehavior: Clip.hardEdge,
             child: Column(
-              children: [for (var i = 0; i < entries.length; i++) _entryRow(entries[i], i != entries.length - 1)],
+              children: [
+                for (var i = 0; i < entries.length; i++)
+                  _entryRow(entries[i], i != entries.length - 1),
+              ],
             ),
           ),
           const SizedBox(height: 12),
@@ -243,7 +326,11 @@ class _CycleCard extends StatelessWidget {
 
   Widget _entryRow(_LedgerEntry e, bool showDivider) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-    decoration: BoxDecoration(border: showDivider ? const Border(bottom: BorderSide(color: AppColors.divider)) : null),
+    decoration: BoxDecoration(
+      border: showDivider
+          ? const Border(bottom: BorderSide(color: AppColors.divider))
+          : null,
+    ),
     child: Row(
       children: [
         Expanded(
@@ -253,15 +340,26 @@ class _CycleCard extends StatelessWidget {
             children: [
               Text(
                 e.label,
-                style: AppTypography.text(size: 13, weight: FontWeight.w600, color: AppColors.ink2),
+                style: AppTypography.text(
+                  size: 13,
+                  weight: FontWeight.w600,
+                  color: AppColors.ink2,
+                ),
               ),
-              Text(formatDate(e.date), style: AppTypography.text(size: 11, color: AppColors.muted)),
+              Text(
+                formatDate(e.date),
+                style: AppTypography.text(size: 11, color: AppColors.muted),
+              ),
             ],
           ),
         ),
         Text(
           formatMoney(e.amount),
-          style: AppTypography.text(size: 13, weight: FontWeight.w700, color: AppColors.ink),
+          style: AppTypography.text(
+            size: 13,
+            weight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
         ),
       ],
     ),
@@ -271,9 +369,19 @@ class _CycleCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.text(size: 12, color: AppColors.muted)),
+        Text(
+          label,
+          style: AppTypography.text(size: 12, color: AppColors.muted),
+        ),
         const SizedBox(height: 2),
-        Text(value, style: AppTypography.text(size: 14, weight: FontWeight.w600, tabular: true)),
+        Text(
+          value,
+          style: AppTypography.text(
+            size: 14,
+            weight: FontWeight.w600,
+            tabular: true,
+          ),
+        ),
       ],
     ),
   );

@@ -64,18 +64,27 @@ class AppTypography {
   }
 
   // Named scale from the DS foundations page.
-  static TextStyle get displayXl =>
-      display(size: 42, weight: FontWeight.w700, height: 46 / 42);
+  static TextStyle get displayXl => display(
+    size: 44,
+    weight: FontWeight.w700,
+    letterSpacing: -0.025,
+    height: 46 / 44,
+  );
   static TextStyle get title =>
       display(size: 30, weight: FontWeight.w700, height: 33 / 30);
-  static TextStyle get amountL => display(size: 28, weight: FontWeight.w700, letterSpacing: -0.01);
-  static TextStyle get titleS => display(size: 22, weight: FontWeight.w700, letterSpacing: -0.01);
+  static TextStyle get amountL =>
+      display(size: 28, weight: FontWeight.w700, letterSpacing: -0.01);
+  static TextStyle get titleS =>
+      display(size: 22, weight: FontWeight.w700, letterSpacing: -0.01);
   static TextStyle get heading => text(size: 17, weight: FontWeight.w700);
   static TextStyle get bodyStrong => text(size: 15, weight: FontWeight.w600);
   static TextStyle get body => text(size: 16, weight: FontWeight.w400);
-  static TextStyle get label => text(size: 13, weight: FontWeight.w600, color: AppColors.ink2);
-  static TextStyle get meta => text(size: 13, weight: FontWeight.w400, color: AppColors.muted);
-  static TextStyle get caption => text(size: 12, weight: FontWeight.w600, color: AppColors.muted);
+  static TextStyle get label =>
+      text(size: 13, weight: FontWeight.w600, color: AppColors.ink2);
+  static TextStyle get meta =>
+      text(size: 13, weight: FontWeight.w400, color: AppColors.muted);
+  static TextStyle get caption =>
+      text(size: 12, weight: FontWeight.w700, color: AppColors.muted);
   static TextStyle get tab => text(size: 11, weight: FontWeight.w700);
 
   static TextTheme textTheme(TextTheme base) {

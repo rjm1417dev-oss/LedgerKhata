@@ -3,8 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../models/customer.dart';
 import '../state/app_state.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../widgets/rise_in.dart';
+import '../widgets/screen_header.dart';
 import '../widgets/app_icon.dart';
 import '../widgets/avatar.dart';
 import '../widgets/buttons.dart';
@@ -12,6 +13,7 @@ import '../widgets/cards.dart';
 import '../widgets/empty_state.dart';
 import 'add_khata_screen.dart';
 import 'clear_khata_sheet.dart';
+import '../widgets/glass.dart';
 
 /// Dashboard: header, remaining-balance hero, three count tiles and the three
 /// most recent khatas. Layout, spacing and type follow the "03 Dashboard"
@@ -28,35 +30,19 @@ class DashboardScreen extends StatelessWidget {
     final business = state.business;
     final khatas = state.khatas;
 
-    return ColoredBox(
-      color: AppColors.paper,
+    return AuroraBackground(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        business?.name ?? '',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.text(size: 13, weight: FontWeight.w600, color: AppColors.muted),
-                      ),
-                      const SizedBox(height: 2),
-                      Text('Dashboard', style: AppTypography.title),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                InitialsAvatar(initials: initialsOf(business?.name ?? ''), size: 44, solid: true),
-              ],
+          ScreenHeader(
+            businessName: business?.name ?? '',
+            title: 'Dashboard',
+            trailing: InitialsAvatar(
+              initials: initialsOf(business?.name ?? ''),
+              size: 44,
+              solid: true,
             ),
           ),
+
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -85,7 +71,11 @@ class DashboardScreen extends StatelessWidget {
                       child: PrimaryButtonSmall(
                         label: 'New Khata',
                         fullWidth: true,
-                        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddKhataScreen())),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const AddKhataScreen(),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -93,11 +83,29 @@ class DashboardScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: StatTile(icon: AppIconGlyph.khata, value: '${khatas.length}', label: 'Khatas')),
+                    Expanded(
+                      child: StatTile(
+                        icon: AppIconGlyph.khata,
+                        value: '${khatas.length}',
+                        label: 'Khatas',
+                      ),
+                    ),
                     const SizedBox(width: 10),
-                    Expanded(child: StatTile(icon: AppIconGlyph.customers, value: '${state.customers.length}', label: 'Customers')),
+                    Expanded(
+                      child: StatTile(
+                        icon: AppIconGlyph.customers,
+                        value: '${state.customers.length}',
+                        label: 'Customers',
+                      ),
+                    ),
                     const SizedBox(width: 10),
-                    Expanded(child: StatTile(icon: AppIconGlyph.item, value: '${state.items.length}', label: 'Items')),
+                    Expanded(
+                      child: StatTile(
+                        icon: AppIconGlyph.item,
+                        value: '${state.items.length}',
+                        label: 'Items',
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -105,9 +113,12 @@ class DashboardScreen extends StatelessWidget {
                   EmptyState(
                     icon: AppIconGlyph.khata,
                     title: 'No khatas yet',
-                    message: 'Create your first khata to record items, discount and payments for a customer.',
+                    message:
+                        'Create your first khata to record items, discount and payments for a customer.',
                     actionLabel: 'New Khata',
-                    onAction: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AddKhataScreen())),
+                    onAction: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const AddKhataScreen()),
+                    ),
                   )
                 else ...[
                   Row(
@@ -120,7 +131,13 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   for (var i = 0; i < state.recentKhatas.length; i++) ...[
                     if (i > 0) const SizedBox(height: 10),
-                    KhataCard(khata: state.recentKhatas[i], compact: true),
+                    RiseIn(
+                      index: i,
+                      child: KhataCard(
+                        khata: state.recentKhatas[i],
+                        compact: true,
+                      ),
+                    ),
                   ],
                 ],
               ],

@@ -30,7 +30,7 @@ class _PressableState extends State<Pressable> {
       onTap: widget.onTap,
       child: AnimatedScale(
         scale: _down ? 0.98 : 1.0,
-        duration: const Duration(milliseconds: 100),
+        duration: const Duration(milliseconds: 150),
         child: widget.child,
       ),
     );

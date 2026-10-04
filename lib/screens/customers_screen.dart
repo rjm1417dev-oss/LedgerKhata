@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import '../data/khata_repository.dart';
 import '../models/customer.dart';
 import '../state/app_state.dart';
-import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../widgets/rise_in.dart';
+import '../widgets/screen_header.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../widgets/app_dialog.dart';
 import '../widgets/app_icon.dart';
@@ -17,6 +18,7 @@ import '../widgets/inputs.dart';
 import '../widgets/list_rows.dart';
 import 'customer_detail_screen.dart';
 import 'validators.dart';
+import '../widgets/glass.dart';
 
 class CustomersScreen extends StatelessWidget {
   const CustomersScreen({super.key});
@@ -42,7 +44,11 @@ class CustomersScreen extends StatelessWidget {
       );
       return;
     }
-    final confirmed = await showAppConfirmDialog(context: context, title: 'Delete ${customer.name}?', message: 'This can’t be undone.');
+    final confirmed = await showAppConfirmDialog(
+      context: context,
+      title: 'Delete ${customer.name}?',
+      message: 'This can’t be undone.',
+    );
     if (!confirmed) return;
     try {
       await state.deleteCustomer(customer.id);
@@ -58,29 +64,19 @@ class CustomersScreen extends StatelessWidget {
     final customers = state.customers;
     final business = state.business;
 
-    return ColoredBox(
-      color: AppColors.paper,
+    return AuroraBackground(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(business?.name ?? '', style: AppTypography.text(size: 13, weight: FontWeight.w600, color: AppColors.muted)),
-                      Text('Customers', style: AppTypography.title),
-                    ],
-                  ),
-                ),
-                PrimaryButtonSmall(label: 'Add', icon: AppIconGlyph.add, onTap: () => _openAddSheet(context)),
-              ],
+          ScreenHeader(
+            businessName: business?.name ?? '',
+            title: 'Customers',
+            trailing: PrimaryButtonSmall(
+              label: 'Add',
+              icon: AppIconGlyph.add,
+              onTap: () => _openAddSheet(context),
             ),
           ),
+
           Expanded(
             child: customers.isEmpty
                 ? EmptyState(
@@ -93,27 +89,32 @@ class CustomersScreen extends StatelessWidget {
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     children: [
-                      Text('${customers.length} customer${customers.length == 1 ? '' : 's'}', style: AppTypography.caption),
+                      Text(
+                        '${customers.length} customer${customers.length == 1 ? '' : 's'}',
+                        style: AppTypography.caption,
+                      ),
                       const SizedBox(height: 10),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          border: Border.all(color: AppColors.line),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        clipBehavior: Clip.hardEdge,
+                      GlassCard(
                         child: Column(
                           children: [
                             for (var i = 0; i < customers.length; i++)
-                              CustomerRow(
-                                initials: customers[i].initials,
-                                name: customers[i].name,
-                                phone: customers[i].phone,
-                                showDivider: i != customers.length - 1,
-                                onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute(builder: (_) => CustomerDetailScreen(customerId: customers[i].id)),
+                              RiseIn(
+                                index: i,
+                                child: CustomerRow(
+                                  initials: customers[i].initials,
+                                  name: customers[i].name,
+                                  phone: customers[i].phone,
+                                  showDivider: i != customers.length - 1,
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => CustomerDetailScreen(
+                                        customerId: customers[i].id,
+                                      ),
+                                    ),
+                                  ),
+                                  onDelete: () =>
+                                      _confirmDelete(context, customers[i]),
                                 ),
-                                onDelete: () => _confirmDelete(context, customers[i]),
                               ),
                           ],
                         ),
@@ -154,7 +155,8 @@ class CustomerFormState extends State<CustomerForm> {
     }
   }
 
-  String? get _nameError => _tried && _name.text.trim().isEmpty ? 'Enter the customer name' : null;
+  String? get _nameError =>
+      _tried && _name.text.trim().isEmpty ? 'Enter the customer name' : null;
   String? get _phoneError => _tried ? phoneError(_phone.text) : null;
 
   Future<void> _save() async {
@@ -170,7 +172,11 @@ class CustomerFormState extends State<CustomerForm> {
     try {
       final state = context.read<AppState>();
       if (_isEdit) {
-        await state.updateCustomer(id: widget.existing!.id, name: name, phone: phone);
+        await state.updateCustomer(
+          id: widget.existing!.id,
+          name: name,
+          phone: phone,
+        );
         if (mounted) showAppToast(context, '$name updated');
       } else {
         await state.addCustomer(name: name, phone: phone);
@@ -210,16 +216,29 @@ class CustomerFormState extends State<CustomerForm> {
           controller: _phone,
           placeholder: '03XX XXXXXXX',
           keyboardType: TextInputType.phone,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]'))],
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]')),
+          ],
           error: _phoneError,
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: SecondaryButton(label: 'Cancel', onTap: () => Navigator.of(context).pop())),
+            Expanded(
+              child: SecondaryButton(
+                label: 'Cancel',
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: PrimaryButton(label: _isEdit ? 'Save changes' : 'Save customer', onTap: _save, loading: _saving)),
+            Expanded(
+              child: PrimaryButton(
+                label: _isEdit ? 'Save changes' : 'Save customer',
+                onTap: _save,
+                loading: _saving,
+              ),
+            ),
           ],
         ),
       ],

@@ -26,19 +26,42 @@ class SplashScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.paper,
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 50, offset: Offset(0, 20))],
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x40000000),
+                        blurRadius: 50,
+                        offset: Offset(0, 20),
+                      ),
+                    ],
                   ),
-                  child: const Center(child: _KhataMark(size: 72, ink: AppColors.brand700, paper: AppColors.paper)),
+                  child: const Center(
+                    child: _KhataMark(
+                      size: 72,
+                      ink: AppColors.brand700,
+                      paper: AppColors.paper,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 22),
                 Text(
                   'Khata',
-                  style: AppTypography.display(size: 48, weight: FontWeight.w800, letterSpacing: -0.03, height: 1, color: AppColors.paper),
+                  style: AppTypography.display(
+                    size: 48,
+                    weight: FontWeight.w800,
+                    letterSpacing: -0.03,
+                    height: 1,
+                    color: AppColors.paper,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Khata Management',
-                  style: AppTypography.text(size: 15, weight: FontWeight.w500, color: const Color(0xFFCFE6DC), letterSpacing: 0.3),
+                  style: AppTypography.text(
+                    size: 15,
+                    weight: FontWeight.w500,
+                    color: const Color(0xFFCFE6DC),
+                    letterSpacing: 0.3,
+                  ),
                 ),
               ],
             ),
@@ -51,7 +74,13 @@ class SplashScreen extends StatelessWidget {
               children: [
                 const _LoadingBar(),
                 const SizedBox(height: 14),
-                Text(message ?? 'Loading\u2026', style: AppTypography.text(size: 13, color: const Color(0xFFCFE6DC))),
+                Text(
+                  message ?? 'Loading\u2026',
+                  style: AppTypography.text(
+                    size: 13,
+                    color: const Color(0xFFCFE6DC),
+                  ),
+                ),
               ],
             ),
           ),
@@ -65,11 +94,18 @@ class _KhataMark extends StatelessWidget {
   final double size;
   final Color ink;
   final Color paper;
-  const _KhataMark({required this.size, required this.ink, required this.paper});
+  const _KhataMark({
+    required this.size,
+    required this.ink,
+    required this.paper,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(size: Size(size, size), painter: _KhataMarkPainter(ink: ink, paper: paper));
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _KhataMarkPainter(ink: ink, paper: paper),
+    );
   }
 }
 
@@ -91,19 +127,36 @@ class _KhataMarkPainter extends CustomPainter {
     final spine = Paint()
       ..color = paper
       ..strokeWidth = 3 * scale;
-    canvas.drawLine(Offset(22 * scale, 8 * scale), Offset(22 * scale, 56 * scale), spine);
+    canvas.drawLine(
+      Offset(22 * scale, 8 * scale),
+      Offset(22 * scale, 56 * scale),
+      spine,
+    );
 
     final ruleLine = Paint()
       ..color = paper
       ..strokeWidth = 3 * scale
       ..strokeCap = StrokeCap.round;
-    canvas.drawLine(Offset(29 * scale, 22 * scale), Offset(44 * scale, 22 * scale), ruleLine);
-    canvas.drawLine(Offset(29 * scale, 31 * scale), Offset(44 * scale, 31 * scale), ruleLine);
-    canvas.drawLine(Offset(29 * scale, 40 * scale), Offset(38 * scale, 40 * scale), ruleLine);
+    canvas.drawLine(
+      Offset(29 * scale, 22 * scale),
+      Offset(44 * scale, 22 * scale),
+      ruleLine,
+    );
+    canvas.drawLine(
+      Offset(29 * scale, 31 * scale),
+      Offset(44 * scale, 31 * scale),
+      ruleLine,
+    );
+    canvas.drawLine(
+      Offset(29 * scale, 40 * scale),
+      Offset(38 * scale, 40 * scale),
+      ruleLine,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _KhataMarkPainter oldDelegate) => oldDelegate.ink != ink || oldDelegate.paper != paper;
+  bool shouldRepaint(covariant _KhataMarkPainter oldDelegate) =>
+      oldDelegate.ink != ink || oldDelegate.paper != paper;
 }
 
 class _RuledPagePainter extends CustomPainter {
@@ -132,13 +185,17 @@ class _LoadingBar extends StatefulWidget {
   State<_LoadingBar> createState() => _LoadingBarState();
 }
 
-class _LoadingBarState extends State<_LoadingBar> with SingleTickerProviderStateMixin {
+class _LoadingBarState extends State<_LoadingBar>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
   }
 
   @override

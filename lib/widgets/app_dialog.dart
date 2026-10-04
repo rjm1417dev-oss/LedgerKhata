@@ -6,10 +6,13 @@ import '../theme/app_typography.dart';
 import 'buttons.dart';
 
 Widget _card(Widget child) => Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(AppRadius.r18)),
-      child: child,
-    );
+  padding: const EdgeInsets.all(20),
+  decoration: BoxDecoration(
+    color: AppColors.surface,
+    borderRadius: BorderRadius.circular(AppRadius.r18),
+  ),
+  child: child,
+);
 
 /// Destructive-action confirmation, e.g. "Delete Sugar?". Returns true only
 /// when the confirm button was tapped.
@@ -31,15 +34,31 @@ Future<bool> showAppConfirmDialog({
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: AppTypography.text(size: 17, weight: FontWeight.w700)),
+            Text(
+              title,
+              style: AppTypography.text(size: 17, weight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
-            Text(message, style: AppTypography.text(size: 14, color: AppColors.muted)),
+            Text(
+              message,
+              style: AppTypography.text(size: 14, color: AppColors.muted),
+            ),
             const SizedBox(height: 20),
             Row(
               children: [
-                Expanded(child: SecondaryButton(label: cancelLabel, onTap: () => Navigator.of(dialogContext).pop(false))),
+                Expanded(
+                  child: SecondaryButton(
+                    label: cancelLabel,
+                    onTap: () => Navigator.of(dialogContext).pop(false),
+                  ),
+                ),
                 const SizedBox(width: 10),
-                Expanded(child: DestructiveButton(label: confirmLabel, onTap: () => Navigator.of(dialogContext).pop(true))),
+                Expanded(
+                  child: DestructiveButton(
+                    label: confirmLabel,
+                    onTap: () => Navigator.of(dialogContext).pop(true),
+                  ),
+                ),
               ],
             ),
           ],
@@ -68,11 +87,20 @@ Future<void> showAppAlertDialog({
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: AppTypography.text(size: 17, weight: FontWeight.w700)),
+            Text(
+              title,
+              style: AppTypography.text(size: 17, weight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
-            Text(message, style: AppTypography.text(size: 14, color: AppColors.muted)),
+            Text(
+              message,
+              style: AppTypography.text(size: 14, color: AppColors.muted),
+            ),
             const SizedBox(height: 20),
-            PrimaryButton(label: okLabel, onTap: () => Navigator.of(dialogContext).pop()),
+            PrimaryButton(
+              label: okLabel,
+              onTap: () => Navigator.of(dialogContext).pop(),
+            ),
           ],
         ),
       ),

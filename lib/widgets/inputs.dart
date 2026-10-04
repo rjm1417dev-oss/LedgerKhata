@@ -19,10 +19,22 @@ class _ErrorLine extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppIcon(AppIconGlyph.error, size: 16, color: AppColors.error, strokeWidth: 2),
+          const AppIcon(
+            AppIconGlyph.error,
+            size: 16,
+            color: AppColors.error,
+            strokeWidth: 2,
+          ),
           const SizedBox(width: 6),
           Flexible(
-            child: Text(error!, style: AppTypography.text(size: 13, weight: FontWeight.w500, color: AppColors.error)),
+            child: Text(
+              error!,
+              style: AppTypography.text(
+                size: 13,
+                weight: FontWeight.w500,
+                color: AppColors.error,
+              ),
+            ),
           ),
         ],
       ),
@@ -30,9 +42,10 @@ class _ErrorLine extends StatelessWidget {
   }
 }
 
-OutlineInputBorder _border(Color color) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(AppRadius.r12),
-      borderSide: BorderSide(color: color, width: 1.5),
+OutlineInputBorder _border(Color color, {double width = 1.5}) =>
+    OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.r14),
+      borderSide: BorderSide(color: color, width: width),
     );
 
 /// A labelled text field matching the "White means writable" input spec.
@@ -82,7 +95,10 @@ class AppTextField extends StatelessWidget {
               hintText: placeholder,
               enabledBorder: _border(borderColor),
               border: _border(borderColor),
-              focusedBorder: _border(hasError ? AppColors.error : AppColors.brand700),
+              focusedBorder: _border(
+                hasError ? AppColors.error : AppColors.brand600,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -120,13 +136,20 @@ class MoneyField extends StatelessWidget {
           height: AppSpacing.fieldHeight,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.inputFill,
             border: Border.all(color: borderColor, width: 1.5),
-            borderRadius: BorderRadius.circular(AppRadius.r12),
+            borderRadius: BorderRadius.circular(AppRadius.r14),
           ),
           child: Row(
             children: [
-              Text('Rs', style: AppTypography.text(size: 15, weight: FontWeight.w600, color: AppColors.muted)),
+              Text(
+                'Rs',
+                style: AppTypography.text(
+                  size: 15,
+                  weight: FontWeight.w600,
+                  color: AppColors.muted,
+                ),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
@@ -183,18 +206,29 @@ class UnitField extends StatelessWidget {
           height: AppSpacing.fieldHeight,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.inputFill,
             border: Border.all(color: borderColor, width: 1.5),
-            borderRadius: BorderRadius.circular(AppRadius.r12),
+            borderRadius: BorderRadius.circular(AppRadius.r14),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: value,
               isExpanded: true,
-              icon: const AppIcon(AppIconGlyph.expand, size: 18, color: AppColors.muted, strokeWidth: 2),
-              hint: Text('Select unit', style: AppTypography.text(size: 15, color: AppColors.chevron)),
+              icon: const AppIcon(
+                AppIconGlyph.expand,
+                size: 18,
+                color: AppColors.muted,
+                strokeWidth: 2,
+              ),
+              hint: Text(
+                'Select unit',
+                style: AppTypography.text(size: 15, color: AppColors.chevron),
+              ),
               style: AppTypography.text(size: 15, weight: FontWeight.w600),
-              items: [for (final u in options) DropdownMenuItem(value: u, child: Text(u))],
+              items: [
+                for (final u in options)
+                  DropdownMenuItem(value: u, child: Text(u)),
+              ],
               onChanged: onChanged,
             ),
           ),
@@ -237,16 +271,24 @@ class SelectField<T> extends StatelessWidget {
           height: AppSpacing.fieldHeight,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.inputFill,
             border: Border.all(color: borderColor, width: 1.5),
-            borderRadius: BorderRadius.circular(AppRadius.r12),
+            borderRadius: BorderRadius.circular(AppRadius.r14),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<T>(
               value: value,
               isExpanded: true,
-              icon: const AppIcon(AppIconGlyph.expand, size: 18, color: AppColors.muted, strokeWidth: 2),
-              hint: Text(hint, style: AppTypography.text(size: 15, color: AppColors.chevron)),
+              icon: const AppIcon(
+                AppIconGlyph.expand,
+                size: 18,
+                color: AppColors.muted,
+                strokeWidth: 2,
+              ),
+              hint: Text(
+                hint,
+                style: AppTypography.text(size: 15, color: AppColors.chevron),
+              ),
               style: AppTypography.text(size: 15, weight: FontWeight.w600),
               items: items,
               onChanged: onChanged,
@@ -291,13 +333,18 @@ class AppSearchField extends StatelessWidget {
           height: AppSpacing.fieldHeight,
           padding: const EdgeInsets.only(left: 14, right: 12),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.inputFill,
             border: Border.all(color: borderColor, width: 1.5),
-            borderRadius: BorderRadius.circular(AppRadius.r12),
+            borderRadius: BorderRadius.circular(AppRadius.r14),
           ),
           child: Row(
             children: [
-              const AppIcon(AppIconGlyph.search, size: 20, color: AppColors.muted, strokeWidth: 2),
+              const AppIcon(
+                AppIconGlyph.search,
+                size: 20,
+                color: AppColors.muted,
+                strokeWidth: 2,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Focus(
@@ -354,8 +401,12 @@ class ComputedField extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             color: AppColors.readonly,
-            border: Border.all(color: AppColors.borderDashed, width: 1.5, style: BorderStyle.solid),
-            borderRadius: BorderRadius.circular(AppRadius.r12),
+            border: Border.all(
+              color: AppColors.borderDashed,
+              width: 1.5,
+              style: BorderStyle.solid,
+            ),
+            borderRadius: BorderRadius.circular(AppRadius.r14),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -363,18 +414,41 @@ class ComputedField extends StatelessWidget {
               Flexible(
                 child: Text(
                   value,
-                  style: AppTypography.display(size: 28, weight: FontWeight.w700, letterSpacing: -0.01, color: valueColor),
+                  style: AppTypography.display(
+                    size: 28,
+                    weight: FontWeight.w700,
+                    letterSpacing: -0.01,
+                    color: valueColor,
+                  ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(color: AppColors.remainingChipBg, borderRadius: BorderRadius.circular(AppRadius.pill)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.remainingChipBg,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const AppIcon(AppIconGlyph.readonly, size: 14, color: AppColors.mutedStrong, strokeWidth: 2.2),
+                    const AppIcon(
+                      AppIconGlyph.readonly,
+                      size: 14,
+                      color: AppColors.mutedStrong,
+                      strokeWidth: 2.2,
+                    ),
                     const SizedBox(width: 6),
-                    Text('Read only', style: AppTypography.text(size: 12, weight: FontWeight.w700, color: AppColors.mutedStrong)),
+                    Text(
+                      'Read only',
+                      style: AppTypography.text(
+                        size: 12,
+                        weight: FontWeight.w700,
+                        color: AppColors.mutedStrong,
+                      ),
+                    ),
                   ],
                 ),
               ),

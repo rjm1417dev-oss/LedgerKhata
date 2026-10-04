@@ -9,6 +9,7 @@ import '../models/customer.dart';
 import '../state/app_state.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../widgets/screen_header.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../widgets/app_icon.dart';
 import '../widgets/app_toast.dart';
@@ -16,6 +17,7 @@ import '../widgets/avatar.dart';
 import '../widgets/buttons.dart';
 import '../widgets/inputs.dart';
 import 'validators.dart';
+import '../widgets/glass.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -28,16 +30,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _uploadingLogo = false;
 
   void _openEditSheet(BuildContext context, Business business) {
-    showAppBottomSheet(context: context, title: 'Edit business', builder: (_) => _BusinessForm(existing: business));
+    showAppBottomSheet(
+      context: context,
+      title: 'Edit business',
+      builder: (_) => _BusinessForm(existing: business),
+    );
   }
 
   Future<void> _pickAndUploadLogo() async {
     final appState = context.read<AppState>();
     final XFile? file;
     try {
-      file = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1024, maxHeight: 1024, imageQuality: 85);
+      file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
     } catch (_) {
-      if (mounted) showAppToast(context, 'Couldn’t open the photo picker.', isError: true);
+      if (mounted) {
+        showAppToast(context, 'Couldn’t open the photo picker.', isError: true);
+      }
       return;
     }
     if (file == null) return;
@@ -63,17 +76,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final business = state.business;
     final initials = initialsOf(business?.name ?? '');
 
-    return ColoredBox(
-      color: AppColors.paper,
+    return AuroraBackground(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 14),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Settings', style: AppTypography.title),
-            ),
-          ),
+          ScreenHeader(businessName: business?.name ?? '', title: 'Settings'),
+
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
@@ -82,29 +89,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
                     'BUSINESS',
-                    style: AppTypography.text(size: 13, weight: FontWeight.w700, color: AppColors.muted, letterSpacing: 0.06 * 13),
+                    style: AppTypography.text(
+                      size: 13,
+                      weight: FontWeight.w700,
+                      color: AppColors.muted,
+                      letterSpacing: 0.06 * 13,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    border: Border.all(color: AppColors.line),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  clipBehavior: Clip.hardEdge,
+                GlassCard(
                   child: Column(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.divider))),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: AppColors.divider),
+                          ),
+                        ),
                         child: Row(
                           children: [
                             _LogoAvatar(
                               logoUrl: business?.logoUrl,
                               initials: initials,
                               uploading: _uploadingLogo,
-                              onTap: business == null ? null : _pickAndUploadLogo,
+                              onTap: business == null
+                                  ? null
+                                  : _pickAndUploadLogo,
                             ),
                             const SizedBox(width: 14),
                             Expanded(
@@ -116,9 +128,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     business?.name ?? '',
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppTypography.text(size: 17, weight: FontWeight.w700),
+                                    style: AppTypography.text(
+                                      size: 17,
+                                      weight: FontWeight.w700,
+                                    ),
                                   ),
-                                  Text('Business account', style: AppTypography.meta),
+                                  Text(
+                                    'Business account',
+                                    style: AppTypography.meta,
+                                  ),
                                 ],
                               ),
                             ),
@@ -137,7 +155,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _row('Owner name', business?.ownerName ?? ''),
                       _row('Phone number', business?.phone ?? ''),
                       _row('Address', business?.address ?? 'Not set'),
-                      _row('Public contact number', business?.contactNumber ?? 'Not set'),
+                      _row(
+                        'Public contact number',
+                        business?.contactNumber ?? 'Not set',
+                      ),
                       _row('Email', state.email ?? '', isLast: true),
                     ],
                   ),
@@ -149,7 +170,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     try {
                       await state.signOut();
                     } on RepositoryException catch (e) {
-                      if (context.mounted) showAppToast(context, e.message, isError: true);
+                      if (context.mounted) {
+                        showAppToast(context, e.message, isError: true);
+                      }
                     }
                   },
                 ),
@@ -166,13 +189,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       constraints: const BoxConstraints(minHeight: 56),
       decoration: BoxDecoration(
-        border: isLast ? null : const Border(bottom: BorderSide(color: AppColors.divider)),
+        border: isLast
+            ? null
+            : const Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTypography.text(size: 14, color: AppColors.muted)),
-          Flexible(child: Text(value, textAlign: TextAlign.right, style: AppTypography.text(size: 15, weight: FontWeight.w600))),
+          Text(
+            label,
+            style: AppTypography.text(size: 14, color: AppColors.muted),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: AppTypography.text(size: 15, weight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
@@ -187,7 +221,12 @@ class _LogoAvatar extends StatelessWidget {
   final bool uploading;
   final VoidCallback? onTap;
 
-  const _LogoAvatar({required this.logoUrl, required this.initials, required this.uploading, required this.onTap});
+  const _LogoAvatar({
+    required this.logoUrl,
+    required this.initials,
+    required this.uploading,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -207,18 +246,29 @@ class _LogoAvatar extends StatelessWidget {
                       width: 48,
                       height: 48,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => InitialsAvatar(initials: initials, size: 48, solid: true),
+                      errorBuilder: (context, error, stackTrace) =>
+                          InitialsAvatar(
+                            initials: initials,
+                            size: 48,
+                            solid: true,
+                          ),
                     ),
             ),
             if (uploading)
               Positioned.fill(
                 child: DecoratedBox(
-                  decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: const Center(
                     child: SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation(Colors.white)),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
                     ),
                   ),
                 ),
@@ -258,10 +308,15 @@ class _BusinessFormState extends State<_BusinessForm> {
     _contactNumber.text = b.contactNumber ?? '';
   }
 
-  String? get _nameError => _tried && _name.text.trim().isEmpty ? 'Enter your business name' : null;
-  String? get _ownerNameError => _tried && _ownerName.text.trim().isEmpty ? 'Enter the owner name' : null;
+  String? get _nameError =>
+      _tried && _name.text.trim().isEmpty ? 'Enter your business name' : null;
+  String? get _ownerNameError =>
+      _tried && _ownerName.text.trim().isEmpty ? 'Enter the owner name' : null;
   String? get _phoneError => _tried ? phoneError(_phone.text) : null;
-  String? get _contactNumberError => (_tried && _contactNumber.text.trim().isNotEmpty) ? phoneError(_contactNumber.text) : null;
+  String? get _contactNumberError =>
+      (_tried && _contactNumber.text.trim().isNotEmpty)
+      ? phoneError(_contactNumber.text)
+      : null;
 
   Future<void> _save() async {
     if (_saving) return;
@@ -276,12 +331,14 @@ class _BusinessFormState extends State<_BusinessForm> {
     setState(() => _saving = true);
     try {
       await context.read<AppState>().updateBusiness(
-            name: _name.text.trim(),
-            ownerName: _ownerName.text.trim(),
-            phone: _phone.text.trim(),
-            address: _address.text.trim().isEmpty ? null : _address.text.trim(),
-            contactNumber: _contactNumber.text.trim().isEmpty ? null : _contactNumber.text.trim(),
-          );
+        name: _name.text.trim(),
+        ownerName: _ownerName.text.trim(),
+        phone: _phone.text.trim(),
+        address: _address.text.trim().isEmpty ? null : _address.text.trim(),
+        contactNumber: _contactNumber.text.trim().isEmpty
+            ? null
+            : _contactNumber.text.trim(),
+      );
       if (!mounted) return;
       showAppToast(context, 'Business details updated');
       Navigator.of(context).pop();
@@ -329,7 +386,9 @@ class _BusinessFormState extends State<_BusinessForm> {
           controller: _phone,
           placeholder: '03XX XXXXXXX',
           keyboardType: TextInputType.phone,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]'))],
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]')),
+          ],
           error: _phoneError,
           onChanged: (_) => setState(() {}),
         ),
@@ -346,16 +405,29 @@ class _BusinessFormState extends State<_BusinessForm> {
           controller: _contactNumber,
           placeholder: '03XX XXXXXXX',
           keyboardType: TextInputType.phone,
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]'))],
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9+\- ]')),
+          ],
           error: _contactNumberError,
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(child: SecondaryButton(label: 'Cancel', onTap: () => Navigator.of(context).pop())),
+            Expanded(
+              child: SecondaryButton(
+                label: 'Cancel',
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ),
             const SizedBox(width: 10),
-            Expanded(child: PrimaryButton(label: 'Save changes', onTap: _save, loading: _saving)),
+            Expanded(
+              child: PrimaryButton(
+                label: 'Save changes',
+                onTap: _save,
+                loading: _saving,
+              ),
+            ),
           ],
         ),
       ],

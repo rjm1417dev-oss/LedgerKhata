@@ -34,10 +34,9 @@ ThemeData buildAppTheme() {
   return base.copyWith(
     colorScheme: colorScheme,
     scaffoldBackgroundColor: AppColors.paper,
-    textTheme: AppTypography.textTheme(base.textTheme).apply(
-      bodyColor: AppColors.ink,
-      displayColor: AppColors.ink,
-    ),
+    textTheme: AppTypography.textTheme(
+      base.textTheme,
+    ).apply(bodyColor: AppColors.ink, displayColor: AppColors.ink),
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
     dividerColor: AppColors.line,

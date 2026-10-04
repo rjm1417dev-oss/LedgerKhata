@@ -6,7 +6,11 @@ import '../theme/app_typography.dart';
 import 'app_icon.dart';
 import 'pressable.dart';
 
-/// Full-width primary action. One per screen per the design language.
+const _brandShadow = [
+  BoxShadow(color: Color(0x4D0E5C45), blurRadius: 18, offset: Offset(0, 8)),
+];
+
+/// Full-width primary action (gradient + brand shadow). One per screen.
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
@@ -18,7 +22,7 @@ class PrimaryButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.loading = false,
-    this.loadingLabel = 'Saving\u2026',
+    this.loadingLabel = 'Saving…',
   });
 
   @override
@@ -26,37 +30,55 @@ class PrimaryButton extends StatelessWidget {
     final disabled = loading || onTap == null;
     return Pressable(
       onTap: disabled ? null : onTap,
-      child: Container(
-        height: AppSpacing.primaryActionHeight,
-        width: double.infinity,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: AppColors.brand700.withValues(alpha: disabled && !loading ? 0.5 : 1),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: loading
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
+      child: Opacity(
+        opacity: disabled && !loading ? 0.5 : 1,
+        child: Container(
+          height: AppSpacing.primaryActionHeight,
+          width: double.infinity,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: AppGradients.brand,
+            borderRadius: BorderRadius.circular(AppRadius.r16),
+            boxShadow: _brandShadow,
+          ),
+          child: loading
+              ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 3,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
                     ),
+                    const SizedBox(width: 8),
+                    Text(
+                      loadingLabel,
+                      style: AppTypography.text(
+                        size: 16,
+                        weight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                )
+              : Text(
+                  label,
+                  style: AppTypography.text(
+                    size: 16,
+                    weight: FontWeight.w700,
+                    color: Colors.white,
                   ),
-                  const SizedBox(width: 8),
-                  Text(loadingLabel, style: AppTypography.text(size: 16, weight: FontWeight.w700, color: Colors.white)),
-                ],
-              )
-            : Text(label, style: AppTypography.text(size: 16, weight: FontWeight.w700, color: Colors.white)),
+                ),
+        ),
       ),
     );
   }
 }
 
-/// Outlined secondary action (Cancel, etc).
+/// Glass outline secondary action (Cancel, etc).
 class SecondaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
@@ -71,11 +93,14 @@ class SecondaryButton extends StatelessWidget {
         height: 52,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.glassPop,
           border: Border.all(color: AppColors.borderInput, width: 1.5),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.r16),
         ),
-        child: Text(label, style: AppTypography.text(size: 15, weight: FontWeight.w700)),
+        child: Text(
+          label,
+          style: AppTypography.text(size: 15, weight: FontWeight.w700),
+        ),
       ),
     );
   }
@@ -87,7 +112,11 @@ class DestructiveButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
 
-  const DestructiveButton({super.key, required this.label, required this.onTap});
+  const DestructiveButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -96,14 +125,24 @@ class DestructiveButton extends StatelessWidget {
       child: Container(
         height: 52,
         alignment: Alignment.center,
-        decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(14)),
-        child: Text(label, style: AppTypography.text(size: 15, weight: FontWeight.w700, color: Colors.white)),
+        decoration: BoxDecoration(
+          color: AppColors.error,
+          borderRadius: BorderRadius.circular(AppRadius.r16),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.text(
+            size: 15,
+            weight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
       ),
     );
   }
 }
 
-/// Small pill primary button with a leading icon, e.g. "New Khata".
+/// Small gradient button with a leading icon, e.g. "New Khata".
 class PrimaryButtonSmall extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
@@ -129,13 +168,24 @@ class PrimaryButtonSmall extends StatelessWidget {
         width: fullWidth ? double.infinity : null,
         alignment: fullWidth ? Alignment.center : null,
         padding: EdgeInsets.only(left: 12, right: fullWidth ? 12 : 16),
-        decoration: BoxDecoration(color: AppColors.brand700, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          gradient: AppGradients.brand,
+          borderRadius: BorderRadius.circular(AppRadius.r14),
+          boxShadow: _brandShadow,
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             AppIcon(icon, size: 18, color: Colors.white, strokeWidth: 2.2),
             const SizedBox(width: 6),
-            Text(label, style: AppTypography.text(size: 14, weight: FontWeight.w700, color: Colors.white)),
+            Text(
+              label,
+              style: AppTypography.text(
+                size: 14,
+                weight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
           ],
         ),
       ),
@@ -143,8 +193,7 @@ class PrimaryButtonSmall extends StatelessWidget {
   }
 }
 
-/// Soft-filled icon button (brand-100 bg, brand-700 icon) e.g. the inline
-/// "add customer" affordance next to a picker.
+/// Soft gradient icon button, e.g. the inline "add customer" affordance.
 class IconButtonSoft extends StatelessWidget {
   final AppIconGlyph icon;
   final VoidCallback? onTap;
@@ -170,20 +219,26 @@ class IconButtonSoft extends StatelessWidget {
           width: size,
           height: size,
           decoration: BoxDecoration(
-            color: AppColors.brand100,
+            gradient: AppGradients.soft,
             border: Border.all(color: AppColors.brand200, width: 1.5),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.r14),
           ),
-          child: Center(child: AppIcon(icon, size: 22, color: AppColors.brand700, strokeWidth: 2.4)),
+          child: Center(
+            child: AppIcon(
+              icon,
+              size: 22,
+              color: AppColors.brand700,
+              strokeWidth: 2.4,
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-/// Ghost / sunken icon button, e.g. back and close affordances. [color] and
-/// [backgroundColor] override the default ink-on-transparent/sunken look,
-/// e.g. for a colored delete or edit affordance.
+/// Glass icon button (back, close). [sunken] gives the flat grey well; [color]
+/// and [backgroundColor] override the look, e.g. for a coloured delete action.
 class IconButtonGhost extends StatelessWidget {
   final AppIconGlyph icon;
   final VoidCallback? onTap;
@@ -204,6 +259,7 @@ class IconButtonGhost extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final glass = backgroundColor == null && !sunken;
     return Semantics(
       label: semanticLabel,
       button: true,
@@ -213,16 +269,27 @@ class IconButtonGhost extends StatelessWidget {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: backgroundColor ?? (sunken ? AppColors.surfaceSunken : Colors.transparent),
-            borderRadius: BorderRadius.circular(12),
+            color:
+                backgroundColor ??
+                (sunken ? AppColors.surfaceSunken : AppColors.glassWhite),
+            border: glass ? Border.all(color: AppColors.glassEdge) : null,
+            borderRadius: BorderRadius.circular(AppRadius.r14),
           ),
-          child: Center(child: AppIcon(icon, size: sunken ? 20 : 24, color: color ?? AppColors.ink2, strokeWidth: 2)),
+          child: Center(
+            child: AppIcon(
+              icon,
+              size: sunken ? 20 : 24,
+              color: color ?? AppColors.ink2,
+              strokeWidth: 2,
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
+/// Text link, e.g. "View all" or "Show all time".
 class TextLinkButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
@@ -236,7 +303,14 @@ class TextLinkButton extends StatelessWidget {
       child: Container(
         constraints: const BoxConstraints(minHeight: AppSpacing.touchMin),
         alignment: Alignment.centerLeft,
-        child: Text(label, style: AppTypography.text(size: 14, weight: FontWeight.w700, color: AppColors.brand700)),
+        child: Text(
+          label,
+          style: AppTypography.text(
+            size: 14,
+            weight: FontWeight.w700,
+            color: AppColors.brand700,
+          ),
+        ),
       ),
     );
   }
