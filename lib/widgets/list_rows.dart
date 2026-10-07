@@ -353,7 +353,7 @@ class SelectedItemRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
@@ -361,6 +361,7 @@ class SelectedItemRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 width: 26,
@@ -381,12 +382,33 @@ class SelectedItemRow extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  name,
-                  style: AppTypography.text(size: 15, weight: FontWeight.w500),
-                  overflow: TextOverflow.ellipsis,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      name,
+                      style: AppTypography.text(
+                        size: 15,
+                        weight: FontWeight.w600,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${formatMoney(price)} / $unit',
+                      style: AppTypography.text(
+                        size: 12,
+                        color: AppColors.muted,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                  ],
                 ),
               ),
+              const SizedBox(width: 8),
               IconButtonGhost(
                 icon: AppIconGlyph.close,
                 onTap: onRemove,
@@ -395,34 +417,36 @@ class SelectedItemRow extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.only(left: 38),
+            padding: const EdgeInsets.only(left: 38, top: 10),
             child: Row(
               children: [
-                Text(
-                  '${formatMoney(price)} / $unit',
-                  style: AppTypography.text(size: 12, color: AppColors.muted),
-                ),
-                const Spacer(),
                 QuantityStepper(
                   controller: quantityController,
                   unit: unit,
                   onChanged: onQuantityChanged,
                 ),
                 const SizedBox(width: 10),
-                ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: quantityController,
-                  builder: (context, value, _) {
-                    final qty = double.tryParse(value.text) ?? 0;
-                    return Text(
-                      formatMoney(price * qty),
-                      style: AppTypography.text(
-                        size: 14,
-                        weight: FontWeight.w700,
-                      ),
-                    );
-                  },
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: quantityController,
+                      builder: (context, value, _) {
+                        final qty = double.tryParse(value.text) ?? 0;
+                        return Text(
+                          formatMoney(price * qty),
+                          style: AppTypography.text(
+                            size: 15,
+                            weight: FontWeight.w700,
+                            color: AppColors.ink,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        );
+                      },
+                    ),
+                  ),
                 ),
               ],
             ),

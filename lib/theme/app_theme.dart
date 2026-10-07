@@ -76,23 +76,23 @@ ThemeData buildAppTheme() {
       contentPadding: const EdgeInsets.symmetric(horizontal: 14),
       hintStyle: AppTypography.body.copyWith(color: AppColors.placeholder),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.r12),
+        borderRadius: BorderRadius.circular(AppRadius.r14),
         borderSide: const BorderSide(color: AppColors.borderInput, width: 1.5),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.r12),
+        borderRadius: BorderRadius.circular(AppRadius.r14),
         borderSide: const BorderSide(color: AppColors.borderInput, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.r12),
+        borderRadius: BorderRadius.circular(AppRadius.r14),
         borderSide: const BorderSide(color: AppColors.brand700, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.r12),
+        borderRadius: BorderRadius.circular(AppRadius.r14),
         borderSide: const BorderSide(color: AppColors.error, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.r12),
+        borderRadius: BorderRadius.circular(AppRadius.r14),
         borderSide: const BorderSide(color: AppColors.error, width: 1.5),
       ),
     ),

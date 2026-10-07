@@ -18,3 +18,5 @@ build/
 # Signing
 *.jks
 key.properties
+# Widget Preview related
+.widget_preview/

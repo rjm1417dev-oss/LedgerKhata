@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../models/item.dart';
 import '../models/khata.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -111,6 +112,197 @@ class KhataCard extends StatelessWidget {
           style: AppTypography.text(size: 12, color: AppColors.muted),
         ),
         const SizedBox(width: 8),
+        Text(
+          value,
+          style: AppTypography.text(
+            size: 14,
+            weight: FontWeight.w600,
+            tabular: true,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Shared ledger-entry helpers (used by KhataCycleCard)
+// ---------------------------------------------------------------------------
+
+class _LedgerEntry {
+  final DateTime date;
+  final String label;
+  final double amount;
+  const _LedgerEntry({
+    required this.date,
+    required this.label,
+    required this.amount,
+  });
+}
+
+List<_LedgerEntry> _entriesFor(Khata k) {
+  final entries = [
+    for (final i in k.items)
+      _LedgerEntry(
+        date: i.date,
+        label: '${i.name} · ${formatQuantity(i.quantity)} ${i.unit}',
+        amount: i.lineTotal,
+      ),
+  ];
+  entries.sort((a, b) => a.date.compareTo(b.date));
+  return entries;
+}
+
+/// A full khata cycle card — identical to the card shown on the Customer
+/// Detail screen. Optionally shows the customer's name & avatar in the header
+/// (set [customerName] when used on a list screen where the customer is not
+/// already implied by context). Provide [onTap] to make the card tappable.
+class KhataCycleCard extends StatelessWidget {
+  final Khata khata;
+
+  /// When non-null, a leading avatar + name row is shown above the date.
+  final String? customerName;
+
+  final VoidCallback? onTap;
+
+  const KhataCycleCard({
+    super.key,
+    required this.khata,
+    this.customerName,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final settled = khata.isSettled;
+    final entries = _entriesFor(khata);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.r18),
+      child: GlassCard(
+        radius: AppRadius.r18,
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── optional customer row ─────────────────────────────────────
+            if (customerName != null) ...[
+              Row(
+                children: [
+                  InitialsAvatar(
+                    initials: customerName!.isNotEmpty
+                        ? customerName![0].toUpperCase()
+                        : '?',
+                    size: 32,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    customerName!,
+                    style: AppTypography.text(
+                      size: 15,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
+            // ── header row: date + settled badge ─────────────────────────
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Opened ${formatDate(khata.date)}',
+                    style: AppTypography.text(
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                ),
+                if (settled) const SettledBadge(),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // ── item entries list ─────────────────────────────────────────
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceSubtle,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: Column(
+                children: [
+                  for (var i = 0; i < entries.length; i++)
+                    _entryRow(entries[i], i != entries.length - 1),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            // ── Total / Discount / Paid footer ────────────────────────────
+            Row(
+              children: [
+                _totalCell('Total', formatMoney(khata.total)),
+                _totalCell('Discount', formatMoney(khata.discount)),
+                _totalCell('Paid', formatMoney(khata.paid)),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _entryRow(_LedgerEntry e, bool showDivider) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    decoration: BoxDecoration(
+      border: showDivider
+          ? const Border(bottom: BorderSide(color: AppColors.divider))
+          : null,
+    ),
+    child: Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                e.label,
+                style: AppTypography.text(
+                  size: 13,
+                  weight: FontWeight.w600,
+                  color: AppColors.ink2,
+                ),
+              ),
+              Text(
+                formatDate(e.date),
+                style: AppTypography.text(size: 11, color: AppColors.muted),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          formatMoney(e.amount),
+          style: AppTypography.text(
+            size: 13,
+            weight: FontWeight.w700,
+            color: AppColors.ink,
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _totalCell(String label, String value) => Expanded(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTypography.text(size: 12, color: AppColors.muted),
+        ),
+        const SizedBox(height: 2),
         Text(
           value,
           style: AppTypography.text(

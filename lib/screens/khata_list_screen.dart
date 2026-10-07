@@ -13,6 +13,7 @@ import '../widgets/cards.dart';
 import '../widgets/empty_state.dart';
 import 'add_khata_screen.dart';
 import 'clear_khata_sheet.dart';
+import 'customer_detail_screen.dart';
 import '../widgets/glass.dart';
 
 class KhataListScreen extends StatefulWidget {
@@ -39,19 +40,28 @@ class _KhataListScreenState extends State<KhataListScreen> {
           ScreenHeader(
             businessName: business?.name ?? '',
             title: 'Khata',
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+            child: Row(
               children: [
-                PrimaryButtonSmall(
-                  label: 'Clear Khata',
-                  icon: AppIconGlyph.selected,
-                  onTap: () => showClearKhataSheet(context),
+                Expanded(
+                  child: PrimaryButtonSmall(
+                    label: 'Clear Khata',
+                    icon: AppIconGlyph.selected,
+                    fullWidth: true,
+                    onTap: () => showClearKhataSheet(context),
+                  ),
                 ),
-                const SizedBox(width: 8),
-                PrimaryButtonSmall(
-                  label: 'New Khata',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AddKhataScreen()),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: PrimaryButtonSmall(
+                    label: 'New Khata',
+                    icon: AppIconGlyph.add,
+                    fullWidth: true,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const AddKhataScreen()),
+                    ),
                   ),
                 ),
               ],
@@ -101,7 +111,17 @@ class _KhataListScreenState extends State<KhataListScreen> {
                             padding: const EdgeInsets.only(bottom: 12),
                             child: RiseIn(
                               index: i,
-                              child: KhataCard(khata: k, showDueBadge: false),
+                              child: KhataCycleCard(
+                                khata: k,
+                                customerName: k.customerName,
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => CustomerDetailScreen(
+                                      customerId: k.customerId,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                     ],

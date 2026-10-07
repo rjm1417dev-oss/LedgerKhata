@@ -20,7 +20,7 @@ class ScreenHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 14),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -61,7 +61,12 @@ class ScreenHeader extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(title, style: AppTypography.title),
+                Text(
+                  title,
+                  style: AppTypography.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),

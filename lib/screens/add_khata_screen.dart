@@ -202,43 +202,51 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
     return Scaffold(
       backgroundColor: AppColors.paper,
       body: AuroraBackground(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 16, 16, 10),
-              child: Row(
-                children: [
-                  IconButtonGhost(
-                    icon: AppIconGlyph.back,
-                    onTap: () => Navigator.of(context).pop(),
-                    semanticLabel: 'Back to Khata',
-                  ),
-                  const SizedBox(width: 6),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        business?.name ?? '',
-                        style: AppTypography.text(
-                          size: 12,
-                          weight: FontWeight.w600,
-                          color: AppColors.muted,
-                        ),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 16, 16, 10),
+                child: Row(
+                  children: [
+                    IconButtonGhost(
+                      icon: AppIconGlyph.back,
+                      onTap: () => Navigator.of(context).pop(),
+                      semanticLabel: 'Back to Khata',
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            business?.name ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.text(
+                              size: 12,
+                              weight: FontWeight.w600,
+                              color: AppColors.muted,
+                            ),
+                          ),
+                          Text(
+                            'New Khata',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.display(
+                              size: 24,
+                              weight: FontWeight.w700,
+                              letterSpacing: -0.02,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        'New Khata',
-                        style: AppTypography.display(
-                          size: 24,
-                          weight: FontWeight.w700,
-                          letterSpacing: -0.02,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
@@ -712,7 +720,12 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
               ),
             ),
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 26),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                12,
+                16,
+                26 + MediaQuery.paddingOf(context).bottom,
+              ),
               decoration: const BoxDecoration(
                 color: AppColors.surface,
                 border: Border(top: BorderSide(color: AppColors.line)),
@@ -755,7 +768,8 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _errorLine(String message) => Padding(

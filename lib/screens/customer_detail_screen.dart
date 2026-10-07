@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/customer.dart';
-import '../models/item.dart';
 import '../models/khata.dart';
 import '../state/app_state.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../widgets/app_icon.dart';
@@ -93,11 +91,13 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     return Scaffold(
       backgroundColor: AppColors.paper,
       body: AuroraBackground(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 16, 16, 10),
-              child: Row(
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 16, 10),
+                child: Row(
                 children: [
                   IconButtonGhost(
                     icon: AppIconGlyph.back,
@@ -227,7 +227,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                     for (final k in khatas)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _CycleCard(khata: k),
+                        child: KhataCycleCard(khata: k),
                       ),
                   ],
                 ],
@@ -236,153 +236,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _LedgerEntry {
-  final DateTime date;
-  final String label;
-  final double amount;
-
-  const _LedgerEntry({
-    required this.date,
-    required this.label,
-    required this.amount,
-  });
-}
-
-List<_LedgerEntry> _entriesFor(Khata k) {
-  final entries = [
-    for (final i in k.items)
-      _LedgerEntry(
-        date: i.date,
-        label: '${i.name} · ${formatQuantity(i.quantity)} ${i.unit}',
-        amount: i.lineTotal,
-      ),
-  ];
-  entries.sort((a, b) => a.date.compareTo(b.date));
-  return entries;
-}
-
-/// One khata cycle: every purchase and payment as its own row, in the order
-/// they happened, followed by the running total/discount/paid breakdown.
-class _CycleCard extends StatelessWidget {
-  final Khata khata;
-
-  const _CycleCard({required this.khata});
-
-  @override
-  Widget build(BuildContext context) {
-    final settled = khata.isSettled;
-    final entries = _entriesFor(khata);
-    return GlassCard(
-      radius: AppRadius.r18,
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Opened ${formatDate(khata.date)}',
-                  style: AppTypography.text(
-                    size: 13,
-                    weight: FontWeight.w600,
-                    color: AppColors.muted,
-                  ),
-                ),
-              ),
-              if (settled) const SettledBadge(),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surfaceSubtle,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            clipBehavior: Clip.hardEdge,
-            child: Column(
-              children: [
-                for (var i = 0; i < entries.length; i++)
-                  _entryRow(entries[i], i != entries.length - 1),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _totalCell('Total', formatMoney(khata.total)),
-              _totalCell('Discount', formatMoney(khata.discount)),
-              _totalCell('Paid', formatMoney(khata.paid)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _entryRow(_LedgerEntry e, bool showDivider) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-    decoration: BoxDecoration(
-      border: showDivider
-          ? const Border(bottom: BorderSide(color: AppColors.divider))
-          : null,
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                e.label,
-                style: AppTypography.text(
-                  size: 13,
-                  weight: FontWeight.w600,
-                  color: AppColors.ink2,
-                ),
-              ),
-              Text(
-                formatDate(e.date),
-                style: AppTypography.text(size: 11, color: AppColors.muted),
-              ),
-            ],
-          ),
-        ),
-        Text(
-          formatMoney(e.amount),
-          style: AppTypography.text(
-            size: 13,
-            weight: FontWeight.w700,
-            color: AppColors.ink,
-          ),
-        ),
-      ],
     ),
   );
-
-  Widget _totalCell(String label, String value) => Expanded(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTypography.text(size: 12, color: AppColors.muted),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: AppTypography.text(
-            size: 14,
-            weight: FontWeight.w600,
-            tabular: true,
-          ),
-        ),
-      ],
-    ),
-  );
+  }
 }

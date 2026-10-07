@@ -42,6 +42,20 @@ class _ErrorLine extends StatelessWidget {
   }
 }
 
+/// Text field inside an outer bordered well: the well draws the only border.
+InputDecoration _innerDecoration({String? hintText}) => InputDecoration(
+      hintText: hintText,
+      isDense: true,
+      filled: false,
+      contentPadding: EdgeInsets.zero,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      disabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+    );
+
 OutlineInputBorder _border(Color color, {double width = 1.5}) =>
     OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.r14),
@@ -159,12 +173,7 @@ class MoneyField extends StatelessWidget {
                   onChanged: onChanged,
                   textAlign: TextAlign.right,
                   style: AppTypography.text(size: 16, weight: FontWeight.w600),
-                  decoration: const InputDecoration(
-                    hintText: '0',
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
+                  decoration: _innerDecoration(hintText: '0'),
                 ),
               ),
             ],
@@ -356,12 +365,7 @@ class AppSearchField extends StatelessWidget {
                     onChanged: onChanged,
                     onTap: onFocus,
                     style: AppTypography.body,
-                    decoration: InputDecoration(
-                      hintText: placeholder,
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
+                    decoration: _innerDecoration(hintText: placeholder),
                   ),
                 ),
               ),

@@ -37,10 +37,10 @@ class QuantityStepper extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _stepButton(AppIconGlyph.remove, () => _step(-1)),
-        const SizedBox(width: 6),
+        const SizedBox(width: 4),
         SizedBox(
-          width: 56,
-          height: 36,
+          width: 48,
+          height: 32,
           child: TextField(
             controller: controller,
             textAlign: TextAlign.center,
@@ -48,29 +48,50 @@ class QuantityStepper extends StatelessWidget {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
             ],
-            style: AppTypography.text(size: 14, weight: FontWeight.w700),
+            style: AppTypography.text(size: 13, weight: FontWeight.w700),
             decoration: InputDecoration(
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 6,
+                horizontal: 2,
+              ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppRadius.r10),
+                borderRadius: BorderRadius.circular(AppRadius.r8),
                 borderSide: const BorderSide(color: AppColors.borderInput),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.r8),
+                borderSide: const BorderSide(color: AppColors.borderInput),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.r8),
+                borderSide: const BorderSide(
+                  color: AppColors.brand700,
+                  width: 1.5,
+                ),
               ),
             ),
             onChanged: (v) => onChanged(double.tryParse(v) ?? 0),
           ),
         ),
-        const SizedBox(width: 6),
-        Text(
-          unit,
-          style: AppTypography.text(
-            size: 13,
-            weight: FontWeight.w600,
-            color: AppColors.muted,
-          ),
-        ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 4),
         _stepButton(AppIconGlyph.add, () => _step(1)),
+        if (unit.trim().isNotEmpty) ...[
+          const SizedBox(width: 6),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 55),
+            child: Text(
+              unit,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.text(
+                size: 12,
+                weight: FontWeight.w600,
+                color: AppColors.muted,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -78,14 +99,14 @@ class QuantityStepper extends StatelessWidget {
   Widget _stepButton(AppIconGlyph icon, VoidCallback onTap) => Pressable(
     onTap: onTap,
     child: Container(
-      width: 30,
-      height: 30,
+      width: 28,
+      height: 28,
       decoration: BoxDecoration(
         color: AppColors.surfaceSunken,
-        borderRadius: BorderRadius.circular(AppRadius.r10),
+        borderRadius: BorderRadius.circular(AppRadius.r8),
       ),
       child: Center(
-        child: AppIcon(icon, size: 14, color: AppColors.ink2, strokeWidth: 2.4),
+        child: AppIcon(icon, size: 13, color: AppColors.ink2, strokeWidth: 2.4),
       ),
     ),
   );
