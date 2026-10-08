@@ -130,6 +130,32 @@ class SupabaseKhataRepository implements KhataRepository {
   Future<void> signOut() => _guard(() => _db.auth.signOut());
 
   @override
+  Future<void> updatePassword({
+    required String newPassword,
+    String? currentPassword,
+  }) {
+    return _guard(() async {
+      if (currentPassword != null && currentPassword.isNotEmpty) {
+        final email = _db.auth.currentUser?.email;
+        if (email != null && email.isNotEmpty) {
+          try {
+            await _db.auth.signInWithPassword(email: email, password: currentPassword);
+          } on AuthException catch (e) {
+            final m = e.message.toLowerCase();
+            if (m.contains('invalid login credentials') ||
+                m.contains('wrong') ||
+                m.contains('invalid credential')) {
+              throw const RepositoryException('Current password is incorrect.');
+            }
+            rethrow;
+          }
+        }
+      }
+      await _db.auth.updateUser(UserAttributes(password: newPassword));
+    });
+  }
+
+  @override
   Future<Business> ensureBusiness() {
     return _guard(() async {
       final existing = await _profile();

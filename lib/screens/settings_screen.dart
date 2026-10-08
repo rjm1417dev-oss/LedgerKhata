@@ -8,6 +8,7 @@ import '../models/business.dart';
 import '../models/customer.dart';
 import '../state/app_state.dart';
 import '../theme/app_colors.dart';
+import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import '../widgets/screen_header.dart';
 import '../widgets/app_bottom_sheet.dart';
@@ -34,6 +35,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       title: 'Edit business',
       builder: (_) => _BusinessForm(existing: business),
+    );
+  }
+
+  void _openUpdatePasswordSheet(BuildContext context) {
+    showAppBottomSheet(
+      context: context,
+      title: 'Update password',
+      builder: (_) => const _UpdatePasswordForm(),
     );
   }
 
@@ -161,6 +170,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       _row('Email', state.email ?? '', isLast: true),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    'SECURITY',
+                    style: AppTypography.text(
+                      size: 13,
+                      weight: FontWeight.w700,
+                      color: AppColors.muted,
+                      letterSpacing: 0.06 * 13,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                GlassCard(
+                  child: InkWell(
+                    onTap: () => _openUpdatePasswordSheet(context),
+                    borderRadius: BorderRadius.circular(AppRadius.r22),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: AppColors.brand100,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Center(
+                              child: AppIcon(
+                                AppIconGlyph.readonly,
+                                size: 24,
+                                color: AppColors.brand700,
+                                strokeWidth: 2.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Password',
+                                  style: AppTypography.text(
+                                    size: 16,
+                                    weight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Change your account password',
+                                  style: AppTypography.meta,
+                                ),
+                              ],
+                            ),
+                          ),
+                          PrimaryButtonSmall(
+                            label: 'Update',
+                            icon: AppIconGlyph.edit,
+                            onTap: () => _openUpdatePasswordSheet(context),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -431,6 +509,140 @@ class _BusinessFormState extends State<_BusinessForm> {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _UpdatePasswordForm extends StatefulWidget {
+  const _UpdatePasswordForm();
+
+  @override
+  State<_UpdatePasswordForm> createState() => _UpdatePasswordFormState();
+}
+
+class _UpdatePasswordFormState extends State<_UpdatePasswordForm> {
+  final _currentPassword = TextEditingController();
+  final _newPassword = TextEditingController();
+  final _confirmPassword = TextEditingController();
+  bool _tried = false;
+  bool _saving = false;
+
+  String? get _currentError {
+    if (!_tried) return null;
+    if (_currentPassword.text.isEmpty) return 'Enter your current password';
+    return null;
+  }
+
+  String? get _newError {
+    if (!_tried) return null;
+    if (_newPassword.text.isEmpty) return 'Enter a new password';
+    if (_newPassword.text.length < 6) return 'Password must be at least 6 characters';
+    if (_currentPassword.text.isNotEmpty && _newPassword.text == _currentPassword.text) {
+      return 'New password must be different from current password';
+    }
+    return null;
+  }
+
+  String? get _confirmError {
+    if (!_tried) return null;
+    if (_confirmPassword.text.isEmpty) return 'Confirm your new password';
+    if (_confirmPassword.text != _newPassword.text) return 'Passwords do not match';
+    return null;
+  }
+
+  bool get _valid =>
+      _currentPassword.text.isNotEmpty &&
+      _newPassword.text.length >= 6 &&
+      _newPassword.text != _currentPassword.text &&
+      _confirmPassword.text == _newPassword.text;
+
+  Future<void> _submit() async {
+    if (_saving) return;
+    if (!_valid) {
+      setState(() => _tried = true);
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() => _saving = true);
+    try {
+      await context.read<AppState>().updatePassword(
+        newPassword: _newPassword.text,
+        currentPassword: _currentPassword.text,
+      );
+      if (!mounted) return;
+      showAppToast(context, 'Password updated successfully');
+      Navigator.of(context).pop();
+    } on RepositoryException catch (e) {
+      if (mounted) showAppToast(context, e.message, isError: true);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _currentPassword.dispose();
+    _newPassword.dispose();
+    _confirmPassword.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Enter your current password to verify your identity, then choose a new password.',
+            style: AppTypography.meta,
+          ),
+          const SizedBox(height: 18),
+          PasswordTextField(
+            label: 'Current password',
+            controller: _currentPassword,
+            placeholder: 'Your current password',
+            error: _currentError,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 16),
+          PasswordTextField(
+            label: 'New password',
+            controller: _newPassword,
+            placeholder: 'At least 6 characters',
+            error: _newError,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 16),
+          PasswordTextField(
+            label: 'Confirm new password',
+            controller: _confirmPassword,
+            placeholder: 'Re-enter your new password',
+            error: _confirmError,
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: SecondaryButton(
+                  label: 'Cancel',
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: PrimaryButton(
+                  label: 'Update password',
+                  onTap: _submit,
+                  loading: _saving,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

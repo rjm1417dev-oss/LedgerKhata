@@ -64,15 +64,32 @@ class FakeRepository implements KhataRepository {
     return true;
   }
 
+  String _password = 'secret123';
+
   @override
   Future<void> signIn({required String email, required String password}) async {
-    if (password != 'secret123') throw const RepositoryException('Wrong email or password.');
+    if (password != _password) throw const RepositoryException('Wrong email or password.');
     _email = email;
     _signedIn = true;
   }
 
   @override
   Future<void> signOut() async => _signedIn = false;
+
+  @override
+  Future<void> updatePassword({
+    required String newPassword,
+    String? currentPassword,
+  }) async {
+    _maybeFail();
+    if (currentPassword != null && currentPassword != _password) {
+      throw const RepositoryException('Current password is incorrect.');
+    }
+    if (newPassword.length < 6) {
+      throw const RepositoryException('Password must be at least 6 characters.');
+    }
+    _password = newPassword;
+  }
 
   @override
   Future<Business> ensureBusiness() async =>

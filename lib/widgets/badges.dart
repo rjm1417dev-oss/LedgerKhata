@@ -66,6 +66,31 @@ class SettledBadge extends StatelessWidget {
   }
 }
 
+class PendingBadge extends StatelessWidget {
+  final String text;
+  const PendingBadge({super.key, this.text = 'Pending'});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.dueSoft,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+      ),
+      child: Text(
+        text,
+        style: AppTypography.text(
+          size: 13,
+          weight: FontWeight.w700,
+          color: AppColors.due,
+        ),
+      ),
+    );
+  }
+}
+
+
 /// Selectable pill used for the month filter row — brand-700 fill when
 /// active, outlined otherwise, matching the chip/badge pill token.
 class AppFilterChip extends StatelessWidget {

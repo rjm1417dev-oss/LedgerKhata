@@ -114,6 +114,7 @@ class _KhataListScreenState extends State<KhataListScreen> {
                               child: KhataCycleCard(
                                 khata: k,
                                 customerName: k.customerName,
+                                showPendingBadge: true,
                                 onTap: () => Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => CustomerDetailScreen(

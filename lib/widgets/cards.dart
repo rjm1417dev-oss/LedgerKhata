@@ -165,11 +165,15 @@ class KhataCycleCard extends StatelessWidget {
 
   final VoidCallback? onTap;
 
+  /// Shows the "Pending" badge on unsettled khatas.
+  final bool showPendingBadge;
+
   const KhataCycleCard({
     super.key,
     required this.khata,
     this.customerName,
     this.onTap,
+    this.showPendingBadge = true,
   });
 
   @override
@@ -207,7 +211,7 @@ class KhataCycleCard extends StatelessWidget {
               ),
               const SizedBox(height: 10),
             ],
-            // ── header row: date + settled badge ─────────────────────────
+            // ── header row: date + settled / pending badge ───────────────
             Row(
               children: [
                 Expanded(
@@ -220,7 +224,10 @@ class KhataCycleCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (settled) const SettledBadge(),
+                if (settled)
+                  const SettledBadge()
+                else if (showPendingBadge)
+                  const PendingBadge(),
               ],
             ),
             const SizedBox(height: 12),

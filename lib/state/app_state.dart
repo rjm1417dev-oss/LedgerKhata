@@ -83,6 +83,16 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updatePassword({
+    required String newPassword,
+    String? currentPassword,
+  }) async {
+    await _repo.updatePassword(
+      newPassword: newPassword,
+      currentPassword: currentPassword,
+    );
+  }
+
   /// Returns false when the project wants the email confirmed before sign-in.
   Future<bool> signUp({
     required String email,

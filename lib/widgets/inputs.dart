@@ -73,6 +73,7 @@ class AppTextField extends StatelessWidget {
   final bool obscureText;
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
+  final Widget? suffixIcon;
 
   const AppTextField({
     super.key,
@@ -85,6 +86,7 @@ class AppTextField extends StatelessWidget {
     this.obscureText = false,
     this.inputFormatters,
     this.onChanged,
+    this.suffixIcon,
   });
 
   @override
@@ -113,11 +115,58 @@ class AppTextField extends StatelessWidget {
                 hasError ? AppColors.error : AppColors.brand600,
                 width: 2,
               ),
+              suffixIcon: suffixIcon,
             ),
           ),
         ),
         _ErrorLine(error),
       ],
+    );
+  }
+}
+
+/// Password input field with an eye toggle to show/hide the password.
+class PasswordTextField extends StatefulWidget {
+  final String label;
+  final String? placeholder;
+  final String? error;
+  final TextEditingController controller;
+  final ValueChanged<String>? onChanged;
+
+  const PasswordTextField({
+    super.key,
+    required this.label,
+    required this.controller,
+    this.placeholder,
+    this.error,
+    this.onChanged,
+  });
+
+  @override
+  State<PasswordTextField> createState() => _PasswordTextFieldState();
+}
+
+class _PasswordTextFieldState extends State<PasswordTextField> {
+  bool _obscure = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppTextField(
+      label: widget.label,
+      controller: widget.controller,
+      placeholder: widget.placeholder,
+      error: widget.error,
+      obscureText: _obscure,
+      onChanged: widget.onChanged,
+      suffixIcon: IconButton(
+        icon: Icon(
+          _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+          size: 20,
+          color: AppColors.muted,
+        ),
+        onPressed: () => setState(() => _obscure = !_obscure),
+        tooltip: _obscure ? 'Show password' : 'Hide password',
+      ),
     );
   }
 }

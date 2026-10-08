@@ -41,6 +41,7 @@ abstract class KhataRepository {
 
   Future<void> signIn({required String email, required String password});
   Future<void> signOut();
+  Future<void> updatePassword({required String newPassword, String? currentPassword});
 
   /// The signed-in user's business, creating it from the sign-up details on
   /// first sign-in (needed when email confirmation delayed the first insert).

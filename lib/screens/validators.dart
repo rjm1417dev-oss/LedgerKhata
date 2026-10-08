@@ -16,3 +16,9 @@ String? emailError(String v) {
   }
   return null;
 }
+
+String? passwordError(String v) {
+  if (v.isEmpty) return 'Enter a password';
+  if (v.length < 6) return 'Password must be at least 6 characters';
+  return null;
+}
