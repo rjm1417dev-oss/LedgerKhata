@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -19,7 +20,7 @@ class DueBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
-        text,
+        context.tr(text),
         style: AppTypography.text(
           size: 13,
           weight: FontWeight.w700,
@@ -53,7 +54,7 @@ class SettledBadge extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            'Settled',
+            context.tr('Settled'),
             style: AppTypography.text(
               size: 13,
               weight: FontWeight.w700,
@@ -79,7 +80,7 @@ class PendingBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
-        text,
+        context.tr(text),
         style: AppTypography.text(
           size: 13,
           weight: FontWeight.w700,
@@ -89,7 +90,6 @@ class PendingBadge extends StatelessWidget {
     );
   }
 }
-
 
 /// Selectable pill used for the month filter row — brand-700 fill when
 /// active, outlined otherwise, matching the chip/badge pill token.
@@ -122,7 +122,7 @@ class AppFilterChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         child: Text(
-          label,
+          context.tr(label),
           style: AppTypography.text(
             size: 13,
             weight: FontWeight.w700,
@@ -141,11 +141,16 @@ class MonthFilterBar extends StatelessWidget {
   final DateTime? selected;
   final ValueChanged<DateTime?> onChanged;
 
+  /// Whether "All time" looks selected. Defaults to no month being selected;
+  /// a custom date range passes false so neither looks selected.
+  final bool? allTimeSelected;
+
   const MonthFilterBar({
     super.key,
     required this.months,
     required this.selected,
     required this.onChanged,
+    this.allTimeSelected,
   });
 
   @override
@@ -161,7 +166,7 @@ class MonthFilterBar extends StatelessWidget {
           if (i == 0) {
             return AppFilterChip(
               label: 'All time',
-              selected: selected == null,
+              selected: allTimeSelected ?? selected == null,
               onTap: () => onChanged(null),
             );
           }
@@ -179,23 +184,8 @@ class MonthFilterBar extends StatelessWidget {
     );
   }
 
-  static const _names = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec', //
-  ];
-
   String _monthLabel(DateTime month) =>
-      '${_names[month.month - 1]} ${month.year}';
+      '${AppLocale.translator.shortMonth(month.month)} ${month.year}';
 }
 
 class CountChip extends StatelessWidget {
@@ -211,7 +201,7 @@ class CountChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.pill),
       ),
       child: Text(
-        text,
+        context.tr(text),
         style: AppTypography.text(
           size: 12,
           weight: FontWeight.w700,

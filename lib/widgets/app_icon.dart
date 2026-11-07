@@ -23,6 +23,13 @@ enum AppIconGlyph {
   close,
   error,
   success,
+  send,
+  export,
+  bag,
+  wallet,
+  globe,
+  userAdd,
+  itemAdd,
 }
 
 const Map<AppIconGlyph, String> _paths = {
@@ -54,6 +61,19 @@ const Map<AppIconGlyph, String> _paths = {
       '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16h.01"/>',
   AppIconGlyph.success:
       '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+  AppIconGlyph.export:
+      '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+  AppIconGlyph.send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  AppIconGlyph.bag:
+      '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  AppIconGlyph.wallet:
+      '<path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>',
+  AppIconGlyph.globe:
+      '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/>',
+  AppIconGlyph.userAdd:
+      '<circle cx="10" cy="8" r="4"/><path d="M2.5 21a7.5 7.5 0 0 1 15 0"/><path d="M19 7.5v6M16 10.5h6"/>',
+  AppIconGlyph.itemAdd:
+      '<path d="M21 10V8l-9-5-9 5v8l9 5 3-1.7"/><path d="m3 8 9 5 9-5M12 13v8"/><path d="M19 15v6M16 18h6"/>',
 };
 
 class AppIcon extends StatelessWidget {

@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -8,13 +9,18 @@ import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'avatar.dart';
 import 'badges.dart';
+import 'buttons.dart';
 import 'app_icon.dart';
 import 'glass.dart';
 
 String formatMoney(num n) => 'Rs ${NumberFormat('#,###').format(n.round())}';
 String formatSignedMoney(num n) =>
     n < 0 ? '−${formatMoney(-n)}' : formatMoney(n);
-String formatDate(DateTime d) => DateFormat('d MMM yyyy').format(d);
+String formatDate(DateTime d) => AppLocale.translator.date(d);
+
+/// Time of day (already shop time, see shop_time.dart), e.g. "3:42 PM".
+String formatTime(DateTime d) => AppLocale.translator.time(d);
+String formatDateTime(DateTime d) => '${formatDate(d)}, ${formatTime(d)}';
 
 /// Khata summary card. Settled khatas collapse to a compact header row;
 /// khatas with a balance due show the item summary and total/discount/paid
@@ -66,7 +72,11 @@ class KhataCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${formatDate(khata.date)} · ${khata.items.length} item${khata.items.length == 1 ? '' : 's'}',
+                    context.tr(
+                      khata.items.length == 1
+                          ? '${formatDate(khata.date)} · 1 item'
+                          : '${formatDate(khata.date)} · ${khata.items.length} items',
+                    ),
                     style: AppTypography.meta,
                   ),
                   if (showDetails) ...[
@@ -87,9 +97,9 @@ class KhataCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  _totalLine('Total', formatMoney(khata.total)),
-                  _totalLine('Discount', formatMoney(khata.discount)),
-                  _totalLine('Paid', formatMoney(khata.paid)),
+                  _totalLine(context, 'Total', formatMoney(khata.total)),
+                  _totalLine(context, 'Discount', formatMoney(khata.discount)),
+                  _totalLine(context, 'Paid', formatMoney(khata.paid)),
                 ],
               )
             else if (settled)
@@ -102,27 +112,28 @@ class KhataCard extends StatelessWidget {
     );
   }
 
-  Widget _totalLine(String label, String value) => Padding(
-    padding: const EdgeInsets.only(bottom: 4),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: AppTypography.text(size: 12, color: AppColors.muted),
+  Widget _totalLine(BuildContext context, String label, String value) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.tr(label),
+              style: AppTypography.text(size: 12, color: AppColors.muted),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              value,
+              style: AppTypography.text(
+                size: 14,
+                weight: FontWeight.w600,
+                tabular: true,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 8),
-        Text(
-          value,
-          style: AppTypography.text(
-            size: 14,
-            weight: FontWeight.w600,
-            tabular: true,
-          ),
-        ),
-      ],
-    ),
-  );
+      );
 }
 
 // ---------------------------------------------------------------------------
@@ -168,12 +179,16 @@ class KhataCycleCard extends StatelessWidget {
   /// Shows the "Pending" badge on unsettled khatas.
   final bool showPendingBadge;
 
+  /// When set, shows a WhatsApp action that sends this khata to the customer.
+  final VoidCallback? onSendWhatsApp;
+
   const KhataCycleCard({
     super.key,
     required this.khata,
     this.customerName,
     this.onTap,
     this.showPendingBadge = true,
+    this.onSendWhatsApp,
   });
 
   @override
@@ -216,7 +231,7 @@ class KhataCycleCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Opened ${formatDate(khata.date)}',
+                    context.tr('Opened ${formatDateTime(khata.date)}'),
                     style: AppTypography.text(
                       size: 13,
                       weight: FontWeight.w600,
@@ -228,6 +243,17 @@ class KhataCycleCard extends StatelessWidget {
                   const SettledBadge()
                 else if (showPendingBadge)
                   const PendingBadge(),
+                if (onSendWhatsApp != null) ...[
+                  const SizedBox(width: 6),
+                  IconButtonGhost(
+                    icon: AppIconGlyph.send,
+                    onTap: onSendWhatsApp,
+                    semanticLabel:
+                        'Send ${khata.customerName} this khata on WhatsApp',
+                    color: AppColors.brand700,
+                    backgroundColor: AppColors.brand100,
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 12),
@@ -249,9 +275,9 @@ class KhataCycleCard extends StatelessWidget {
             // ── Total / Discount / Paid footer ────────────────────────────
             Row(
               children: [
-                _totalCell('Total', formatMoney(khata.total)),
-                _totalCell('Discount', formatMoney(khata.discount)),
-                _totalCell('Paid', formatMoney(khata.paid)),
+                _totalCell(context, 'Total', formatMoney(khata.total)),
+                _totalCell(context, 'Discount', formatMoney(khata.discount)),
+                _totalCell(context, 'Paid', formatMoney(khata.paid)),
               ],
             ),
           ],
@@ -283,7 +309,7 @@ class KhataCycleCard extends StatelessWidget {
                 ),
               ),
               Text(
-                formatDate(e.date),
+                formatDateTime(e.date),
                 style: AppTypography.text(size: 11, color: AppColors.muted),
               ),
             ],
@@ -301,26 +327,27 @@ class KhataCycleCard extends StatelessWidget {
     ),
   );
 
-  Widget _totalCell(String label, String value) => Expanded(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTypography.text(size: 12, color: AppColors.muted),
+  Widget _totalCell(BuildContext context, String label, String value) =>
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.tr(label),
+              style: AppTypography.text(size: 12, color: AppColors.muted),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: AppTypography.text(
+                size: 14,
+                weight: FontWeight.w600,
+                tabular: true,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          style: AppTypography.text(
-            size: 14,
-            weight: FontWeight.w600,
-            tabular: true,
-          ),
-        ),
-      ],
-    ),
-  );
+      );
 }
 
 /// Dashboard's remaining-balance hero card with the faint ruled-paper motif.
@@ -332,8 +359,12 @@ class BalanceHero extends StatelessWidget {
   final double totalDiscount;
   final double totalReceived;
 
+  /// Heading above the amount.
+  final String title;
+
   const BalanceHero({
     super.key,
+    this.title = 'Total remaining',
     required this.totalRemaining,
     required this.pendingCount,
     required this.totalKhatas,
@@ -365,7 +396,7 @@ class BalanceHero extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total remaining',
+                context.tr(title),
                 style: AppTypography.text(
                   size: 13,
                   weight: FontWeight.w600,
@@ -391,7 +422,7 @@ class BalanceHero extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Pending on $pendingCount of $totalKhatas khatas',
+                context.tr('Pending on $pendingCount of $totalKhatas khatas'),
                 style: AppTypography.text(
                   size: 13,
                   color: const Color(0xFFD5EAE1),
@@ -407,9 +438,9 @@ class BalanceHero extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    _stat('Total billed', formatMoney(totalBilled)),
-                    _stat('Discount', formatMoney(totalDiscount)),
-                    _stat('Received', formatMoney(totalReceived)),
+                    _stat(context, 'Total billed', formatMoney(totalBilled)),
+                    _stat(context, 'Discount', formatMoney(totalDiscount)),
+                    _stat(context, 'Received', formatMoney(totalReceived)),
                   ],
                 ),
               ),
@@ -420,12 +451,12 @@ class BalanceHero extends StatelessWidget {
     );
   }
 
-  Widget _stat(String label, String value) => Expanded(
+  Widget _stat(BuildContext context, String label, String value) => Expanded(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          context.tr(label),
           style: AppTypography.text(size: 12, color: AppColors.onBrand),
         ),
         const SizedBox(height: 3),
@@ -507,7 +538,7 @@ class StatTile extends StatelessWidget {
               tabular: true,
             ),
           ),
-          Text(label, style: AppTypography.meta),
+          Text(context.tr(label), style: AppTypography.meta),
         ],
       ),
     );

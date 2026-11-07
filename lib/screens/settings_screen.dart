@@ -1,3 +1,5 @@
+import '../widgets/language_selector.dart';
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -97,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
-                    'BUSINESS',
+                    context.tr('BUSINESS'),
                     style: AppTypography.text(
                       size: 13,
                       weight: FontWeight.w700,
@@ -143,7 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                   ),
                                   Text(
-                                    'Business account',
+                                    context.tr('Business account'),
                                     style: AppTypography.meta,
                                   ),
                                 ],
@@ -160,15 +162,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ],
                         ),
                       ),
-                      _row('Business name', business?.name ?? ''),
-                      _row('Owner name', business?.ownerName ?? ''),
-                      _row('Phone number', business?.phone ?? ''),
-                      _row('Address', business?.address ?? 'Not set'),
+                      _row(context, 'Business name', business?.name ?? ''),
+                      _row(context, 'Owner name', business?.ownerName ?? ''),
+                      _row(context, 'Phone number', business?.phone ?? ''),
                       _row(
-                        'Public contact number',
-                        business?.contactNumber ?? 'Not set',
+                        context,
+                        'Address',
+                        business?.address ?? context.tr('Not set'),
                       ),
-                      _row('Email', state.email ?? '', isLast: true),
+                      _row(
+                        context,
+                        'Public contact number',
+                        business?.contactNumber ?? context.tr('Not set'),
+                      ),
+                      _row(context, 'Email', state.email ?? '', isLast: true),
                     ],
                   ),
                 ),
@@ -176,7 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
-                    'SECURITY',
+                    context.tr('SECURITY'),
                     style: AppTypography.text(
                       size: 13,
                       weight: FontWeight.w700,
@@ -217,7 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Password',
+                                  context.tr('Password'),
                                   style: AppTypography.text(
                                     size: 16,
                                     weight: FontWeight.w700,
@@ -225,7 +232,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Change your account password',
+                                  context.tr('Change your account password'),
                                   style: AppTypography.meta,
                                 ),
                               ],
@@ -235,6 +242,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             label: 'Update',
                             icon: AppIconGlyph.edit,
                             onTap: () => _openUpdatePasswordSheet(context),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                GlassCard(
+                  child: InkWell(
+                    onTap: () => showLanguageDialog(context),
+                    borderRadius: BorderRadius.circular(AppRadius.r22),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          const AppIcon(
+                            AppIconGlyph.globe,
+                            size: 22,
+                            color: AppColors.brand700,
+                            strokeWidth: 2,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              context.tr('Language'),
+                              style: AppTypography.text(
+                                size: 16,
+                                weight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            context.language.nativeName,
+                            style: AppTypography.text(
+                              size: 15,
+                              weight: FontWeight.w600,
+                              color: AppColors.muted,
+                            ),
                           ),
                         ],
                       ),
@@ -262,7 +307,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _row(String label, String value, {bool isLast = false}) {
+  Widget _row(
+    BuildContext context,
+    String label,
+    String value, {
+    bool isLast = false,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       constraints: const BoxConstraints(minHeight: 56),
@@ -275,7 +325,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            label,
+            context.tr(label),
             style: AppTypography.text(size: 14, color: AppColors.muted),
           ),
           Flexible(
@@ -536,8 +586,10 @@ class _UpdatePasswordFormState extends State<_UpdatePasswordForm> {
   String? get _newError {
     if (!_tried) return null;
     if (_newPassword.text.isEmpty) return 'Enter a new password';
-    if (_newPassword.text.length < 6) return 'Password must be at least 6 characters';
-    if (_currentPassword.text.isNotEmpty && _newPassword.text == _currentPassword.text) {
+    if (_newPassword.text.length < 6)
+      return 'Password must be at least 6 characters';
+    if (_currentPassword.text.isNotEmpty &&
+        _newPassword.text == _currentPassword.text) {
       return 'New password must be different from current password';
     }
     return null;
@@ -546,7 +598,8 @@ class _UpdatePasswordFormState extends State<_UpdatePasswordForm> {
   String? get _confirmError {
     if (!_tried) return null;
     if (_confirmPassword.text.isEmpty) return 'Confirm your new password';
-    if (_confirmPassword.text != _newPassword.text) return 'Passwords do not match';
+    if (_confirmPassword.text != _newPassword.text)
+      return 'Passwords do not match';
     return null;
   }
 
@@ -595,7 +648,9 @@ class _UpdatePasswordFormState extends State<_UpdatePasswordForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Enter your current password to verify your identity, then choose a new password.',
+            context.tr(
+              'Enter your current password to verify your identity, then choose a new password.',
+            ),
             style: AppTypography.meta,
           ),
           const SizedBox(height: 18),

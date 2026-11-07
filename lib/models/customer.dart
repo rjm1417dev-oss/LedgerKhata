@@ -1,5 +1,9 @@
 String initialsOf(String name) {
-  final parts = name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).take(2);
+  final parts = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((w) => w.isNotEmpty)
+      .take(2);
   return parts.map((w) => w[0]).join().toUpperCase();
 }
 

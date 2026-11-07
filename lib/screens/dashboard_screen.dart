@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -12,6 +13,7 @@ import '../widgets/buttons.dart';
 import '../widgets/cards.dart';
 import '../widgets/empty_state.dart';
 import 'add_khata_screen.dart';
+import 'export_report_screen.dart';
 import 'clear_khata_sheet.dart';
 import '../widgets/glass.dart';
 
@@ -80,6 +82,17 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                PrimaryButtonSmall(
+                  label: 'Export Reports',
+                  icon: AppIconGlyph.export,
+                  fullWidth: true,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ExportReportScreen(),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -124,7 +137,10 @@ class DashboardScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Recent khatas', style: AppTypography.heading),
+                      Text(
+                        context.tr('Recent khatas'),
+                        style: AppTypography.heading,
+                      ),
                       TextLinkButton(label: 'View all', onTap: onViewAllKhatas),
                     ],
                   ),

@@ -1,7 +1,10 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/khata.dart';
+import '../models/khata_filters.dart';
+import '../widgets/khata_filters.dart';
 import '../state/app_state.dart';
 import '../theme/app_typography.dart';
 import '../widgets/rise_in.dart';
@@ -14,6 +17,7 @@ import '../widgets/empty_state.dart';
 import 'add_khata_screen.dart';
 import 'clear_khata_sheet.dart';
 import 'customer_detail_screen.dart';
+import 'send_khata_sheet.dart';
 import '../widgets/glass.dart';
 
 class KhataListScreen extends StatefulWidget {
@@ -24,7 +28,7 @@ class KhataListScreen extends StatefulWidget {
 }
 
 class _KhataListScreenState extends State<KhataListScreen> {
-  DateTime? _month;
+  KhataFilters _filters = KhataFilters.none;
 
   @override
   Widget build(BuildContext context) {
@@ -32,15 +36,12 @@ class _KhataListScreenState extends State<KhataListScreen> {
     final allKhatas = state.khatas;
     final business = state.business;
     final months = monthsIn(allKhatas);
-    final khatas = allKhatas.where((k) => k.inMonth(_month)).toList();
+    final khatas = allKhatas.where(_filters.matchesKhata).toList();
 
     return AuroraBackground(
       child: Column(
         children: [
-          ScreenHeader(
-            businessName: business?.name ?? '',
-            title: 'Khata',
-          ),
+          ScreenHeader(businessName: business?.name ?? '', title: 'Khata'),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
             child: Row(
@@ -83,16 +84,16 @@ class _KhataListScreenState extends State<KhataListScreen> {
                 : ListView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     children: [
-                      if (months.length > 1) ...[
-                        MonthFilterBar(
-                          months: months,
-                          selected: _month,
-                          onChanged: (m) => setState(() => _month = m),
-                        ),
-                        const SizedBox(height: 14),
-                      ],
+                      KhataFilterPanel(
+                        filters: _filters,
+                        months: months,
+                        onChanged: (f) => setState(() => _filters = f),
+                      ),
+                      const SizedBox(height: 14),
                       Text(
-                        '${khatas.length} khata${khatas.length == 1 ? '' : 's'}',
+                        (khatas.length == 1
+                            ? '1 khata'
+                            : '${khatas.length} khatas'),
                         style: AppTypography.caption,
                       ),
                       const SizedBox(height: 12),
@@ -100,7 +101,7 @@ class _KhataListScreenState extends State<KhataListScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 32),
                           child: Text(
-                            'No khatas that month.',
+                            context.tr('No entries for this filter'),
                             style: AppTypography.meta,
                             textAlign: TextAlign.center,
                           ),
@@ -115,6 +116,8 @@ class _KhataListScreenState extends State<KhataListScreen> {
                                 khata: k,
                                 customerName: k.customerName,
                                 showPendingBadge: true,
+                                onSendWhatsApp: () =>
+                                    showSendStatementSheet(context, state, k),
                                 onTap: () => Navigator.of(context).push(
                                   MaterialPageRoute(
                                     builder: (_) => CustomerDetailScreen(

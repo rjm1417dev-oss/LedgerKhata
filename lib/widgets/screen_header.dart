@@ -1,6 +1,8 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import 'language_selector.dart';
 import '../theme/app_typography.dart';
 
 /// Screen header: the live tenant dot and business name above the title, with
@@ -62,7 +64,7 @@ class ScreenHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  title,
+                  context.tr(title),
                   style: AppTypography.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -71,6 +73,8 @@ class ScreenHeader extends StatelessWidget {
             ),
           ),
           if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+          const SizedBox(width: 8),
+          const LanguageButton(),
         ],
       ),
     );

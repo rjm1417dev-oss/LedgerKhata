@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:my_first_app/data/khata_repository.dart';
 import 'package:my_first_app/main.dart';
 import 'package:my_first_app/models/business.dart';
+import 'package:my_first_app/services/whatsapp.dart';
 import 'package:my_first_app/widgets/buttons.dart';
+import 'package:my_first_app/widgets/inputs.dart';
 
 import 'support/fake_repository.dart';
 import 'support/test_setup.dart';
@@ -119,17 +121,17 @@ void main() {
     await tester.tap(find.text('Basmati Rice 5kg'));
     await tester.tap(find.text('Cooking Oil 1L'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Done'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(find.text('Items total'), findsOneWidget);
 
     // The payment section is below the fold, so scroll to it first.
-    await tester.drag(find.byType(ListView).first, const Offset(0, -2000));
+    await tester.scrollUntilVisible(find.text('Remaining amount'), 300, scrollable: find.byType(Scrollable).first);
     await tester.pumpAndSettle();
-    final fields = find.byType(TextField);
-    final count = fields.evaluate().length;
-    final discount = fields.at(count - 2);
-    final paid = fields.at(count - 1);
+    final discount = find.descendant(of: find.byType(MoneyField).at(0), matching: find.byType(TextField));
+    final paid = find.descendant(of: find.byType(MoneyField).at(1), matching: find.byType(TextField));
     await tester.enterText(discount, '65');
     await tester.enterText(paid, '3000');
     await tester.pumpAndSettle();
@@ -144,6 +146,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Khata saved for Ahmed Raza'), findsOneWidget);
     await settleToasts(tester);
+
+    expect(find.text('Send on WhatsApp?'), findsNothing); // plain Save Khata never opens WhatsApp
 
     // Back on the Khata tab the new khata is listed with its balance.
     await tester.tap(find.byType(IconButtonGhost).first);
@@ -207,7 +211,7 @@ void main() {
     });
     await openTab(tester, 'Items');
 
-    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.tap(find.bySemanticsLabel(RegExp('^Delete ')).first);
     await tester.pumpAndSettle();
     expect(find.text('Delete Sugar?'), findsOneWidget);
     expect(find.text('This can’t be undone.'), findsOneWidget);
@@ -217,7 +221,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Sugar'), findsOneWidget);
 
-    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.tap(find.bySemanticsLabel(RegExp('^Delete ')).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
@@ -240,7 +244,7 @@ void main() {
     });
     await openTab(tester, 'Items');
 
-    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.tap(find.bySemanticsLabel(RegExp('^Delete ')).first);
     await tester.pumpAndSettle();
     expect(find.textContaining('Used in 1 khata'), findsOneWidget);
   });
@@ -256,7 +260,7 @@ void main() {
     expect(find.text('0300 1234567'), findsOneWidget); // now on the detail page
 
     // Header icons in order: back, edit, close.
-    await tester.tap(find.byType(IconButtonGhost).at(1));
+    await tester.tap(find.byType(IconButtonGhost).at(2));
     await tester.pumpAndSettle();
     expect(find.text('Edit customer'), findsOneWidget);
 
@@ -292,7 +296,7 @@ void main() {
     });
     await openTab(tester, 'Customers');
 
-    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.tap(find.bySemanticsLabel(RegExp('^Delete ')).first);
     await tester.pumpAndSettle();
     expect(find.text('Delete Ahmed Raza?'), findsOneWidget);
 
@@ -318,7 +322,7 @@ void main() {
     });
     await openTab(tester, 'Customers');
 
-    await tester.tap(find.byType(IconButtonGhost).first);
+    await tester.tap(find.bySemanticsLabel(RegExp('^Delete ')).first);
     await tester.pumpAndSettle();
     expect(find.text('Can’t delete Ahmed Raza'), findsOneWidget);
     expect(find.textContaining('has 1 khata on record'), findsOneWidget);
@@ -362,6 +366,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Khata cleared for Ahmed Raza'), findsOneWidget);
+    // History (the default view) lists the purchase and the payment separately.
+    expect(find.textContaining('Purchase'), findsWidgets);
+    expect(find.text('Payment received'), findsOneWidget);
+    expect(find.text('Clear'), findsWidgets); // balance now: Clear
+    await tester.tap(find.text('Khatas'));
+    await tester.pumpAndSettle();
     expect(find.text('Settled'), findsOneWidget);
     expect(find.text('Rs 1,650 due'), findsNothing);
     await settleToasts(tester);
@@ -403,7 +413,7 @@ void main() {
 
     expect(find.text('Not set'), findsNWidgets(2)); // Address, Public contact number
 
-    await tester.tap(find.byType(IconButtonGhost));
+    await tester.tap(find.byType(IconButtonGhost).last);
     await tester.pumpAndSettle();
     expect(find.text('Edit business'), findsOneWidget);
 
@@ -447,5 +457,48 @@ void main() {
     await tester.tap(add);
     await tester.pumpAndSettle();
     expect(find.text('New Khata'), findsWidgets); // the new khata screen opened
+  });
+
+  testWidgets('Save & Share saves the khata and sends exactly that entry to the customer on WhatsApp', (tester) async {
+    final launched = <Uri>[];
+    whatsAppLauncher = (uri) async {
+      launched.add(uri);
+      return true;
+    };
+    addTearDown(() => whatsAppLauncher = (uri) async => false);
+
+    await pumpSignedIn(tester, seed: (repo) async {
+      await repo.addItem(name: 'Basmati Rice 5kg', price: 1650, unit: 'piece');
+      await repo.addCustomer(name: 'Ahmed Raza', phone: '0300 1234567');
+      await repo.addCustomer(name: 'Sana Malik', phone: '0311 7654321');
+    });
+
+    await openTab(tester, 'Khata');
+    await tester.tap(find.text('New Khata').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Choose a customer'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ahmed Raza'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Search by item name'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Basmati Rice 5kg'));
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save & Share'));
+    await tester.pumpAndSettle();
+    expect(find.text('Khata saved for Ahmed Raza'), findsOneWidget);
+    await settleToasts(tester);
+
+    expect(launched, hasLength(1));
+    final uri = launched.single;
+    expect(uri.host, 'wa.me');
+    expect(uri.path, '/923001234567'); // Ahmed's number, not Sana's
+    final text = uri.queryParameters['text']!;
+    expect(text, contains('Al-Noor Traders'));
+    expect(text, contains('Dear Ahmed Raza'));
+    expect(text, contains('Basmati Rice 5kg'));
+    expect(text, contains('Rs 1,650'));
+    expect(text, isNot(contains('Sana')));
   });
 }

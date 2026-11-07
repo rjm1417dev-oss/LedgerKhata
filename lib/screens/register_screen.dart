@@ -1,3 +1,5 @@
+import '../widgets/language_selector.dart';
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -131,19 +133,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            'Khata',
-                            style: AppTypography.display(
-                              size: 22,
-                              weight: FontWeight.w800,
-                              letterSpacing: -0.02,
+                          Expanded(
+                            child: Text(
+                              context.tr('Khata'),
+                              style: AppTypography.display(
+                                size: 22,
+                                weight: FontWeight.w800,
+                                letterSpacing: -0.02,
+                              ),
                             ),
                           ),
+                          const LanguageButton(),
                         ],
                       ),
                       const SizedBox(height: 28),
                       Text(
-                        'Register your business',
+                        context.tr('Register your business'),
                         style: AppTypography.display(
                           size: 32,
                           weight: FontWeight.w700,
@@ -153,7 +158,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Your khatas, customers and items stay private to your business account.',
+                        context.tr(
+                          'Your khatas, customers and items stay private to your business account.',
+                        ),
                         style: AppTypography.text(
                           size: 15,
                           height: 1.5,
@@ -235,7 +242,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
-                            'Already have an account?',
+                            context.tr('Already have an account?'),
                             style: AppTypography.meta,
                           ),
                           const SizedBox(width: 6),

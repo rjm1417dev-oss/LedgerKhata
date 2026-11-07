@@ -188,6 +188,16 @@ class FakeRepository implements KhataRepository {
   @override
   Future<List<Khata>> fetchKhatas() async => List.of(_khatas.reversed);
 
+  DateTime _last = DateTime.fromMicrosecondsSinceEpoch(0);
+
+  /// [now], nudged forward by a microsecond when the previous record already
+  /// has that instant — the real database's clock never repeats a timestamp.
+  DateTime _stamp() {
+    var t = now;
+    if (!t.isAfter(_last)) t = _last.add(const Duration(microseconds: 1));
+    return _last = t;
+  }
+
   @override
   Future<void> createKhata({
     required String customerId,
@@ -199,16 +209,23 @@ class FakeRepository implements KhataRepository {
     final customer = _customers.firstWhere((c) => c.id == customerId);
     final lines = items.map((s) => (item: _items.firstWhere((i) => i.id == s.itemId), quantity: s.quantity)).toList();
     final newTotal = lines.fold(0.0, (a, l) => a + l.item.price * l.quantity);
+    final at = _stamp();
+    final purchaseId = 'pu${++_seq}';
     final newLines = lines
         .map((l) => KhataLineItem(
               itemId: l.item.id,
+              purchaseId: purchaseId,
               name: l.item.name,
               price: l.item.price,
               quantity: l.quantity,
               unit: l.item.unit,
-              date: now,
+              date: at,
             ))
         .toList();
+    final purchase = KhataPurchase(id: purchaseId, date: at, discount: discount, lines: newLines);
+    final payment = paid > 0
+        ? KhataPayment(id: 'p${++_seq}', amount: paid, date: _stamp(), purchaseId: purchaseId)
+        : null;
 
     // Traditional khata-book practice: keep adding rows to the customer's
     // open (unsettled) cycle; only start a new one once the last is settled.
@@ -235,7 +252,8 @@ class FakeRepository implements KhataRepository {
         customerInitials: existing.customerInitials,
         date: existing.date,
         items: [...existing.items, ...newLines],
-        payments: existing.payments,
+        payments: [...existing.payments, ?payment],
+        purchases: [...existing.purchases, purchase],
         discount: combinedDiscount,
         paid: combinedPaid,
       );
@@ -248,9 +266,10 @@ class FakeRepository implements KhataRepository {
         customerId: customer.id,
         customerName: customer.name,
         customerInitials: customer.initials,
-        date: now,
+        date: at,
         items: newLines,
-        payments: const [],
+        payments: [?payment],
+        purchases: [purchase],
         discount: discount,
         paid: paid,
       ));
@@ -258,7 +277,7 @@ class FakeRepository implements KhataRepository {
   }
 
   @override
-  Future<void> recordCustomerPayment({required String customerId, required double amount}) async {
+  Future<void> recordCustomerPayment({required String customerId, required double amount, String? method}) async {
     _maybeFail();
     if (amount <= 0) {
       throw const RepositoryException('Enter a payment amount greater than 0');
@@ -272,6 +291,8 @@ class FakeRepository implements KhataRepository {
       throw RepositoryException('That payment is more than the outstanding amount (${outstanding.round()})');
     }
     var left = amount;
+    final paymentId = 'pay${++_seq}';
+    final at = _stamp();
     for (var idx = 0; idx < _khatas.length && left > 0; idx++) {
       if (!owes(_khatas[idx])) continue;
       final existing = _khatas[idx];
@@ -283,7 +304,8 @@ class FakeRepository implements KhataRepository {
         customerInitials: existing.customerInitials,
         date: existing.date,
         items: existing.items,
-        payments: [...existing.payments, KhataPayment(id: 'p${++_seq}', amount: apply, date: now)],
+        payments: [...existing.payments, KhataPayment(id: 'p${++_seq}', paymentId: paymentId, amount: apply, date: at, method: method)],
+        purchases: existing.purchases,
         discount: existing.discount,
         paid: existing.paid + apply,
       );

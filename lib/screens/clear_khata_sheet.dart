@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -34,6 +35,9 @@ class _ClearKhataForm extends StatefulWidget {
 class _ClearKhataFormState extends State<_ClearKhataForm> {
   final _amount = TextEditingController();
   String? _customerId;
+
+  /// 'cash' (the default), 'online', or null when left unselected.
+  String? _method = 'cash';
   bool _tried = false;
   bool _saving = false;
 
@@ -91,7 +95,11 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
         'Customer';
     final clearing = amount >= _outstanding;
     try {
-      await state.recordCustomerPayment(customerId: id, amount: amount);
+      await state.recordCustomerPayment(
+        customerId: id,
+        amount: amount,
+        method: _method,
+      );
       if (!mounted) return;
       showAppToast(
         context,
@@ -165,7 +173,10 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
                         weight: FontWeight.w600,
                       ),
                     ),
-                    Text('Total outstanding', style: AppTypography.meta),
+                    Text(
+                      context.tr('Total outstanding'),
+                      style: AppTypography.meta,
+                    ),
                   ],
                 ),
                 Text(
@@ -185,6 +196,27 @@ class _ClearKhataFormState extends State<_ClearKhataForm> {
             controller: _amount,
             error: _amountError,
             onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 16),
+          SelectField<String?>(
+            label: 'Payment method',
+            hint: 'Not selected',
+            value: _method,
+            items: [
+              DropdownMenuItem<String?>(
+                value: null,
+                child: Text(context.tr('Not selected')),
+              ),
+              DropdownMenuItem<String?>(
+                value: 'cash',
+                child: Text(context.tr('Cash')),
+              ),
+              DropdownMenuItem<String?>(
+                value: 'online',
+                child: Text(context.tr('Online')),
+              ),
+            ],
+            onChanged: (v) => setState(() => _method = v),
           ),
           const SizedBox(height: 16),
         ],

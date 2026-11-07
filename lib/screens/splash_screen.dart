@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -161,9 +162,7 @@ class _SplashScreenState extends State<SplashScreen>
         fit: StackFit.expand,
         children: [
           // 1. Aurora atmosphere background with gentle drift
-          RepaintBoundary(
-            child: _AuroraBackgroundLayer(drift: _driftValue),
-          ),
+          RepaintBoundary(child: _AuroraBackgroundLayer(drift: _driftValue)),
 
           // 2. Ruled ledger lines overlay
           const Positioned.fill(
@@ -228,12 +227,12 @@ class _SplashScreenState extends State<SplashScreen>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              const Color(0xFF5CC7A0).withValues(
-                                alpha: _glowOpacity.value,
-                              ),
-                              const Color(0xFF5CC7A0).withValues(
-                                alpha: _glowOpacity.value * 0.45,
-                              ),
+                              const Color(
+                                0xFF5CC7A0,
+                              ).withValues(alpha: _glowOpacity.value),
+                              const Color(
+                                0xFF5CC7A0,
+                              ).withValues(alpha: _glowOpacity.value * 0.45),
                               const Color(0xFF5CC7A0).withValues(alpha: 0.0),
                             ],
                             stops: const [0.0, 0.45, 1.0],
@@ -355,7 +354,7 @@ class _SplashScreenState extends State<SplashScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'Khata',
+            context.tr('Khata'),
             style: AppTypography.display(
               size: 52,
               weight: FontWeight.w800,
@@ -366,7 +365,7 @@ class _SplashScreenState extends State<SplashScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Khata Management',
+            context.tr('Khata Management'),
             style: AppTypography.text(
               size: 15,
               weight: FontWeight.w500,
@@ -397,7 +396,7 @@ class _SplashScreenState extends State<SplashScreen>
           const _LoadingBar(),
           const SizedBox(height: 14),
           Text(
-            widget.message ?? 'Loading\u2026',
+            context.tr(widget.message ?? 'Loading\u2026'),
             style: AppTypography.text(
               size: 13,
               weight: FontWeight.w400,
@@ -423,11 +422,7 @@ class _AuroraBackgroundLayer extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment(-0.6, -1.0), // ~160 deg
           end: Alignment(0.6, 1.0),
-          colors: [
-            Color(0xFF0F6149),
-            Color(0xFF0B4A38),
-            Color(0xFF083829),
-          ],
+          colors: [Color(0xFF0F6149), Color(0xFF0B4A38), Color(0xFF083829)],
           stops: [0.0, 0.55, 1.0],
         ),
       ),
@@ -657,7 +652,8 @@ class _RuledPagePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final horizontalRule = Paint()
-      ..color = const Color(0x0FF6F4EE) // rgba(246,244,238, .06)
+      ..color =
+          const Color(0x0FF6F4EE) // rgba(246,244,238, .06)
       ..strokeWidth = 1.0;
 
     for (double y = 0; y < size.height; y += 32.0) {
@@ -665,10 +661,15 @@ class _RuledPagePainter extends CustomPainter {
     }
 
     final verticalMargin = Paint()
-      ..color = const Color(0x1FF6F4EE) // rgba(246,244,238, .12)
+      ..color =
+          const Color(0x1FF6F4EE) // rgba(246,244,238, .12)
       ..strokeWidth = 1.0;
 
-    canvas.drawLine(const Offset(56.0, 0), Offset(56.0, size.height), verticalMargin);
+    canvas.drawLine(
+      const Offset(56.0, 0),
+      Offset(56.0, size.height),
+      verticalMargin,
+    );
   }
 
   @override

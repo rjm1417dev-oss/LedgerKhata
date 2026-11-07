@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -17,12 +18,16 @@ class PrimaryButton extends StatelessWidget {
   final bool loading;
   final String loadingLabel;
 
+  /// Shorter button with smaller text, for tight bars holding two actions.
+  final bool compact;
+
   const PrimaryButton({
     super.key,
     required this.label,
     required this.onTap,
     this.loading = false,
     this.loadingLabel = 'Saving…',
+    this.compact = false,
   });
 
   @override
@@ -33,7 +38,7 @@ class PrimaryButton extends StatelessWidget {
       child: Opacity(
         opacity: disabled && !loading ? 0.5 : 1,
         child: Container(
-          height: AppSpacing.primaryActionHeight,
+          height: compact ? 44 : AppSpacing.primaryActionHeight,
           width: double.infinity,
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -55,9 +60,9 @@ class PrimaryButton extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      loadingLabel,
+                      context.tr(loadingLabel),
                       style: AppTypography.text(
-                        size: 16,
+                        size: compact ? 14 : 16,
                         weight: FontWeight.w700,
                         color: Colors.white,
                       ),
@@ -65,9 +70,9 @@ class PrimaryButton extends StatelessWidget {
                   ],
                 )
               : Text(
-                  label,
+                  context.tr(label),
                   style: AppTypography.text(
-                    size: 16,
+                    size: compact ? 14 : 16,
                     weight: FontWeight.w700,
                     color: Colors.white,
                   ),
@@ -82,15 +87,21 @@ class PrimaryButton extends StatelessWidget {
 class SecondaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
+  final bool compact;
 
-  const SecondaryButton({super.key, required this.label, required this.onTap});
+  const SecondaryButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+    this.compact = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Pressable(
       onTap: onTap,
       child: Container(
-        height: 52,
+        height: compact ? 44 : 52,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: AppColors.glassPop,
@@ -98,8 +109,11 @@ class SecondaryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.r16),
         ),
         child: Text(
-          label,
-          style: AppTypography.text(size: 15, weight: FontWeight.w700),
+          context.tr(label),
+          style: AppTypography.text(
+            size: compact ? 14 : 15,
+            weight: FontWeight.w700,
+          ),
         ),
       ),
     );
@@ -130,7 +144,7 @@ class DestructiveButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.r16),
         ),
         child: Text(
-          label,
+          context.tr(label),
           style: AppTypography.text(
             size: 15,
             weight: FontWeight.w700,
@@ -179,7 +193,7 @@ class PrimaryButtonSmall extends StatelessWidget {
             AppIcon(icon, size: 18, color: Colors.white, strokeWidth: 2.2),
             const SizedBox(width: 6),
             Text(
-              label,
+              context.tr(label),
               style: AppTypography.text(
                 size: 14,
                 weight: FontWeight.w700,
@@ -211,7 +225,7 @@ class IconButtonSoft extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: semanticLabel,
+      label: context.tr(semanticLabel),
       button: true,
       child: Pressable(
         onTap: onTap,
@@ -261,7 +275,7 @@ class IconButtonGhost extends StatelessWidget {
   Widget build(BuildContext context) {
     final glass = backgroundColor == null && !sunken;
     return Semantics(
-      label: semanticLabel,
+      label: context.tr(semanticLabel),
       button: true,
       child: Pressable(
         onTap: onTap,
@@ -304,11 +318,52 @@ class TextLinkButton extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: AppSpacing.touchMin),
         alignment: Alignment.centerLeft,
         child: Text(
-          label,
+          context.tr(label),
           style: AppTypography.text(
             size: 14,
             weight: FontWeight.w700,
             color: AppColors.brand700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Round primary action (the "add" button in a screen's top-right corner).
+/// Same brand gradient and shadow as every other primary button, so actions
+/// of the same weight look the same on every screen.
+class CircleActionButton extends StatelessWidget {
+  final AppIconGlyph icon;
+  final VoidCallback? onTap;
+  final String semanticLabel;
+
+  static const double size = 48;
+
+  const CircleActionButton({
+    super.key,
+    required this.icon,
+    required this.onTap,
+    required this.semanticLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: context.tr(semanticLabel),
+      button: true,
+      child: Pressable(
+        onTap: onTap,
+        child: Container(
+          width: size,
+          height: size,
+          decoration: const BoxDecoration(
+            gradient: AppGradients.brand,
+            shape: BoxShape.circle,
+            boxShadow: _brandShadow,
+          ),
+          child: Center(
+            child: AppIcon(icon, size: 24, color: Colors.white, strokeWidth: 2),
           ),
         ),
       ),

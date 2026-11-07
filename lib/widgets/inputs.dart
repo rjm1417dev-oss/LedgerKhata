@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -28,7 +29,7 @@ class _ErrorLine extends StatelessWidget {
           const SizedBox(width: 6),
           Flexible(
             child: Text(
-              error!,
+              context.tr(error!),
               style: AppTypography.text(
                 size: 13,
                 weight: FontWeight.w500,
@@ -44,17 +45,17 @@ class _ErrorLine extends StatelessWidget {
 
 /// Text field inside an outer bordered well: the well draws the only border.
 InputDecoration _innerDecoration({String? hintText}) => InputDecoration(
-      hintText: hintText,
-      isDense: true,
-      filled: false,
-      contentPadding: EdgeInsets.zero,
-      border: InputBorder.none,
-      enabledBorder: InputBorder.none,
-      disabledBorder: InputBorder.none,
-      focusedBorder: InputBorder.none,
-      errorBorder: InputBorder.none,
-      focusedErrorBorder: InputBorder.none,
-    );
+  hintText: hintText,
+  isDense: true,
+  filled: false,
+  contentPadding: EdgeInsets.zero,
+  border: InputBorder.none,
+  enabledBorder: InputBorder.none,
+  disabledBorder: InputBorder.none,
+  focusedBorder: InputBorder.none,
+  errorBorder: InputBorder.none,
+  focusedErrorBorder: InputBorder.none,
+);
 
 OutlineInputBorder _border(Color color, {double width = 1.5}) =>
     OutlineInputBorder(
@@ -96,7 +97,7 @@ class AppTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.label),
+        Text(context.tr(label), style: AppTypography.label),
         const SizedBox(height: 6),
         SizedBox(
           height: AppSpacing.fieldHeight,
@@ -108,7 +109,7 @@ class AppTextField extends StatelessWidget {
             onChanged: onChanged,
             style: AppTypography.body,
             decoration: InputDecoration(
-              hintText: placeholder,
+              hintText: placeholder == null ? null : context.tr(placeholder!),
               enabledBorder: _border(borderColor),
               border: _border(borderColor),
               focusedBorder: _border(
@@ -193,7 +194,7 @@ class MoneyField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.label),
+        Text(context.tr(label), style: AppTypography.label),
         const SizedBox(height: 6),
         Container(
           height: AppSpacing.fieldHeight,
@@ -258,7 +259,7 @@ class UnitField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.label),
+        Text(context.tr(label), style: AppTypography.label),
         const SizedBox(height: 6),
         Container(
           height: AppSpacing.fieldHeight,
@@ -279,7 +280,7 @@ class UnitField extends StatelessWidget {
                 strokeWidth: 2,
               ),
               hint: Text(
-                'Select unit',
+                context.tr('Select unit'),
                 style: AppTypography.text(size: 15, color: AppColors.chevron),
               ),
               style: AppTypography.text(size: 15, weight: FontWeight.w600),
@@ -323,7 +324,7 @@ class SelectField<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.label),
+        Text(context.tr(label), style: AppTypography.label),
         const SizedBox(height: 6),
         Container(
           height: AppSpacing.fieldHeight,
@@ -344,7 +345,7 @@ class SelectField<T> extends StatelessWidget {
                 strokeWidth: 2,
               ),
               hint: Text(
-                hint,
+                context.tr(hint),
                 style: AppTypography.text(size: 15, color: AppColors.chevron),
               ),
               style: AppTypography.text(size: 15, weight: FontWeight.w600),
@@ -385,7 +386,7 @@ class AppSearchField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.label),
+        Text(context.tr(label), style: AppTypography.label),
         const SizedBox(height: 8),
         Container(
           height: AppSpacing.fieldHeight,
@@ -414,7 +415,9 @@ class AppSearchField extends StatelessWidget {
                     onChanged: onChanged,
                     onTap: onFocus,
                     style: AppTypography.body,
-                    decoration: _innerDecoration(hintText: placeholder),
+                    decoration: _innerDecoration(
+                      hintText: context.tr(placeholder),
+                    ),
                   ),
                 ),
               ),
@@ -447,7 +450,7 @@ class ComputedField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTypography.label),
+        Text(context.tr(label), style: AppTypography.label),
         const SizedBox(height: 6),
         Container(
           constraints: const BoxConstraints(minHeight: 64),
@@ -495,7 +498,7 @@ class ComputedField extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Read only',
+                      context.tr('Read only'),
                       style: AppTypography.text(
                         size: 12,
                         weight: FontWeight.w700,
@@ -509,7 +512,7 @@ class ComputedField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        Text(helper, style: AppTypography.meta),
+        Text(context.tr(helper), style: AppTypography.meta),
       ],
     );
   }

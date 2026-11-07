@@ -41,7 +41,10 @@ abstract class KhataRepository {
 
   Future<void> signIn({required String email, required String password});
   Future<void> signOut();
-  Future<void> updatePassword({required String newPassword, String? currentPassword});
+  Future<void> updatePassword({
+    required String newPassword,
+    String? currentPassword,
+  });
 
   /// The signed-in user's business, creating it from the sign-up details on
   /// first sign-in (needed when email confirmation delayed the first insert).
@@ -56,16 +59,32 @@ abstract class KhataRepository {
   });
 
   /// Uploads a new business logo and saves it on the business, returning its URL.
-  Future<String> uploadBusinessLogo({required Uint8List bytes, required String fileExtension});
+  Future<String> uploadBusinessLogo({
+    required Uint8List bytes,
+    required String fileExtension,
+  });
 
   Future<List<Customer>> fetchCustomers();
   Future<Customer> addCustomer({required String name, required String phone});
-  Future<Customer> updateCustomer({required String id, required String name, required String phone});
+  Future<Customer> updateCustomer({
+    required String id,
+    required String name,
+    required String phone,
+  });
   Future<void> deleteCustomer(String id);
 
   Future<List<Item>> fetchItems();
-  Future<Item> addItem({required String name, required double price, required String unit});
-  Future<Item> updateItem({required String id, required String name, required double price, required String unit});
+  Future<Item> addItem({
+    required String name,
+    required double price,
+    required String unit,
+  });
+  Future<Item> updateItem({
+    required String id,
+    required String name,
+    required double price,
+    required String unit,
+  });
   Future<void> deleteItem(String id);
 
   Future<List<Khata>> fetchKhatas();
@@ -83,5 +102,11 @@ abstract class KhataRepository {
 
   /// Clears part or all of a customer's outstanding khata. The amount is
   /// applied to their open khatas oldest first; the khata records stay as history.
-  Future<void> recordCustomerPayment({required String customerId, required double amount});
+  ///
+  /// [method] is 'cash' or 'online', or null to leave it unrecorded.
+  Future<void> recordCustomerPayment({
+    required String customerId,
+    required double amount,
+    String? method,
+  });
 }

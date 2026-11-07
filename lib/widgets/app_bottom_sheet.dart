@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -52,7 +53,7 @@ Future<T?> showAppBottomSheet<T>({
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(title, style: AppTypography.titleS),
+                      Text(context.tr(title), style: AppTypography.titleS),
                       IconButtonGhost(
                         icon: AppIconGlyph.close,
                         onTap: () => Navigator.of(context).pop(),

@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -93,7 +94,7 @@ class _RootShellState extends State<RootShell> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            tab.label,
+                            context.tr(tab.label),
                             style: AppTypography.text(
                               size: 11,
                               weight: active

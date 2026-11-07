@@ -1,3 +1,5 @@
+import '../widgets/language_selector.dart';
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -92,19 +94,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          Text(
-                            'Khata',
-                            style: AppTypography.display(
-                              size: 22,
-                              weight: FontWeight.w800,
-                              letterSpacing: -0.02,
+                          Expanded(
+                            child: Text(
+                              context.tr('Khata'),
+                              style: AppTypography.display(
+                                size: 22,
+                                weight: FontWeight.w800,
+                                letterSpacing: -0.02,
+                              ),
                             ),
                           ),
+                          const LanguageButton(),
                         ],
                       ),
                       const SizedBox(height: 28),
                       Text(
-                        'Welcome back',
+                        context.tr('Welcome back'),
                         style: AppTypography.display(
                           size: 32,
                           weight: FontWeight.w700,
@@ -114,7 +119,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Sign in to see your khatas, customers and items.',
+                        context.tr(
+                          'Sign in to see your khatas, customers and items.',
+                        ),
                         style: AppTypography.text(
                           size: 15,
                           height: 1.5,
@@ -131,7 +138,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: Text(
-                            widget.notice!,
+                            context.tr(widget.notice!),
                             style: AppTypography.text(
                               size: 14,
                               height: 1.5,
@@ -162,7 +169,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          Text('New here?', style: AppTypography.meta),
+                          Text(
+                            context.tr('New here?'),
+                            style: AppTypography.meta,
+                          ),
                           const SizedBox(width: 6),
                           TextLinkButton(
                             label: 'Register your business',

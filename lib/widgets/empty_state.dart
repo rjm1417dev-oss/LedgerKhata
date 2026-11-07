@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -47,7 +48,7 @@ class EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Text(
-              title,
+              context.tr(title),
               style: AppTypography.text(size: 19, weight: FontWeight.w700),
               textAlign: TextAlign.center,
             ),
@@ -55,7 +56,7 @@ class EmptyState extends StatelessWidget {
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 260),
               child: Text(
-                message,
+                context.tr(message),
                 textAlign: TextAlign.center,
                 style: AppTypography.text(
                   size: 14,

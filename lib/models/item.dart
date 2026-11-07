@@ -1,6 +1,17 @@
 /// Units a shopkeeper can sell an item in. Kept short and shop-friendly
 /// rather than exhaustive.
-const List<String> kItemUnits = ['piece', 'kg', 'gram', 'litre', 'ml', 'dozen', 'packet', 'box', 'meter'];
+const List<String> kItemUnits = [
+  'piece',
+  'kg',
+  'gram',
+  'litre',
+  'ml',
+  'dozen',
+  'packet',
+  'box',
+  'meter',
+  'cotton',
+];
 
 class Item {
   final String id;
@@ -10,7 +21,12 @@ class Item {
   final double price;
   final String unit;
 
-  const Item({required this.id, required this.name, required this.price, required this.unit});
+  const Item({
+    required this.id,
+    required this.name,
+    required this.price,
+    required this.unit,
+  });
 }
 
 /// Trims a quantity like 5.000 down to "5" and 2.500 down to "2.5".

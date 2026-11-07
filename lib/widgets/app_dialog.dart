@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -35,12 +36,12 @@ Future<bool> showAppConfirmDialog({
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              title,
+              context.tr(title),
               style: AppTypography.text(size: 17, weight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
-              message,
+              context.tr(message),
               style: AppTypography.text(size: 14, color: AppColors.muted),
             ),
             const SizedBox(height: 20),
@@ -88,12 +89,12 @@ Future<void> showAppAlertDialog({
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              title,
+              context.tr(title),
               style: AppTypography.text(size: 17, weight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
-              message,
+              context.tr(message),
               style: AppTypography.text(size: 14, color: AppColors.muted),
             ),
             const SizedBox(height: 20),

@@ -23,15 +23,23 @@ class AppTypography {
     Color color = AppColors.ink,
     bool tabular = false,
   }) {
-    return GoogleFonts.bricolageGrotesque(
-      fontSize: size,
-      fontWeight: weight,
-      letterSpacing: size * letterSpacing,
-      height: height ?? _bricolageNormalLineHeight,
-      color: color,
-      fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
+    return _withUrdu(
+      GoogleFonts.bricolageGrotesque(
+        fontSize: size,
+        fontWeight: weight,
+        letterSpacing: size * letterSpacing,
+        height: height ?? _bricolageNormalLineHeight,
+        color: color,
+        fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
+      ),
     );
   }
+
+  /// Latin text uses the Google fonts; Urdu script falls back to the bundled
+  /// Naskh font so it renders the same on every platform.
+  static TextStyle _withUrdu(TextStyle style) => style.copyWith(
+    fontFamilyFallback: [...?style.fontFamilyFallback, 'ReportUrdu'],
+  );
 
   static TextStyle text({
     required double size,
@@ -41,13 +49,15 @@ class AppTypography {
     Color color = AppColors.ink,
     bool tabular = false,
   }) {
-    return GoogleFonts.instrumentSans(
-      fontSize: size,
-      fontWeight: weight,
-      letterSpacing: letterSpacing,
-      height: height ?? _instrumentNormalLineHeight,
-      color: color,
-      fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
+    return _withUrdu(
+      GoogleFonts.instrumentSans(
+        fontSize: size,
+        fontWeight: weight,
+        letterSpacing: letterSpacing,
+        height: height ?? _instrumentNormalLineHeight,
+        color: color,
+        fontFeatures: tabular ? const [FontFeature.tabularFigures()] : null,
+      ),
     );
   }
 

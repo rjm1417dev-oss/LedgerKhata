@@ -43,7 +43,11 @@ class Env {
     }
 
     final url = (dotenv.maybeGet('SUPABASE_URL') ?? '').trim();
-    final key = (dotenv.maybeGet('SUPABASE_PUBLISHABLE_KEY') ?? dotenv.maybeGet('SUPABASE_ANON_KEY') ?? '').trim();
+    final key =
+        (dotenv.maybeGet('SUPABASE_PUBLISHABLE_KEY') ??
+                dotenv.maybeGet('SUPABASE_ANON_KEY') ??
+                '')
+            .trim();
     if (url.isEmpty || key.isEmpty) return null;
     return Env(supabaseUrl: url, supabaseKey: key);
   }

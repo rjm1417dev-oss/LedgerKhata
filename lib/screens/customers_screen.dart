@@ -38,9 +38,9 @@ class CustomersScreen extends StatelessWidget {
       await showAppAlertDialog(
         context: context,
         title: 'Can’t delete ${customer.name}',
-        message:
-            '${customer.name} has ${count == 1 ? '1 khata' : '$count khatas'} on record. '
-            'Delete those khatas first if you still want to remove this customer.',
+        message: count == 1
+            ? '${customer.name} has 1 khata on record. Delete that khata first if you still want to remove this customer.'
+            : '${customer.name} has $count khatas on record. Delete those khatas first if you still want to remove this customer.',
       );
       return;
     }
@@ -70,9 +70,9 @@ class CustomersScreen extends StatelessWidget {
           ScreenHeader(
             businessName: business?.name ?? '',
             title: 'Customers',
-            trailing: PrimaryButtonSmall(
-              label: 'Add',
-              icon: AppIconGlyph.add,
+            trailing: CircleActionButton(
+              icon: AppIconGlyph.userAdd,
+              semanticLabel: 'Add customer',
               onTap: () => _openAddSheet(context),
             ),
           ),
@@ -90,7 +90,9 @@ class CustomersScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     children: [
                       Text(
-                        '${customers.length} customer${customers.length == 1 ? '' : 's'}',
+                        (customers.length == 1
+                            ? '1 customer'
+                            : '${customers.length} customers'),
                         style: AppTypography.caption,
                       ),
                       const SizedBox(height: 10),

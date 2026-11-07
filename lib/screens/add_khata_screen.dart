@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -17,10 +18,12 @@ import '../widgets/app_toast.dart';
 import '../widgets/avatar.dart';
 import '../widgets/badges.dart';
 import '../widgets/buttons.dart';
+import '../widgets/language_selector.dart';
 import '../widgets/cards.dart';
 import '../widgets/inputs.dart';
 import '../widgets/list_rows.dart';
 import '../widgets/pressable.dart';
+import '../services/whatsapp.dart';
 import 'validators.dart';
 
 class AddKhataScreen extends StatefulWidget {
@@ -115,7 +118,9 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
     }
   }
 
-  Future<void> _save(AppState state) async {
+  /// Saves the khata; with [share], then opens WhatsApp to the customer with
+  /// the saved entry ready to send.
+  Future<void> _save(AppState state, {bool share = false}) async {
     if (_saving) return;
     final selectedItems = _selectedItems(state);
     final discount = double.tryParse(_discount.text) ?? 0;
@@ -139,8 +144,9 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
     });
 
     final savedName = _customer!.name;
+    KhataEntry? saved;
     try {
-      await state.addKhata(
+      final entry = await state.addKhata(
         customer: _customer!,
         selectedItems: selectedItems,
         discount: discount,
@@ -160,10 +166,35 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
         _query.clear();
       });
       showAppToast(context, 'Khata saved for $savedName');
+      saved = entry;
     } on RepositoryException catch (e) {
       if (mounted) showAppToast(context, e.message, isError: true);
     } finally {
       if (mounted) setState(() => _saving = false);
+    }
+
+    if (share && saved != null && mounted) {
+      final result = await sendWhatsApp(
+        saved.customer,
+        khataEntryMessage(saved, state.business),
+      );
+      if (!mounted) return;
+      switch (result) {
+        case WhatsAppResult.opened:
+          break;
+        case WhatsAppResult.badNumber:
+          showAppToast(
+            context,
+            'Khata saved, but ${saved.customer.name}’s phone number isn’t valid for WhatsApp.',
+            isError: true,
+          );
+        case WhatsAppResult.unavailable:
+          showAppToast(
+            context,
+            'Khata saved, but WhatsApp couldn’t be opened.',
+            isError: true,
+          );
+      }
     }
   }
 
@@ -232,7 +263,7 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
                             ),
                           ),
                           Text(
-                            'New Khata',
+                            context.tr('New Khata'),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.display(
@@ -244,532 +275,562 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(width: 6),
+                    const LanguageButton(),
                   ],
                 ),
               ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-                children: [
-                  _section(
-                    index: 1,
-                    title: 'Customer',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Select customer', style: AppTypography.label),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Pressable(
-                                onTap: () => setState(() {
-                                  _custOpen = !_custOpen;
-                                  _searchOpen = false;
-                                }),
-                                child: Container(
-                                  constraints: const BoxConstraints(
-                                    minHeight: 54,
-                                  ),
-                                  padding: const EdgeInsets.only(
-                                    left: 14,
-                                    right: 12,
-                                    top: 8,
-                                    bottom: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.surface,
-                                    border: Border.all(
-                                      color: custErr != null
-                                          ? AppColors.error
-                                          : AppColors.borderInput,
-                                      width: 1.5,
-                                    ),
-                                    borderRadius: BorderRadius.circular(
-                                      AppRadius.r12,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: _customer == null
-                                            ? Text(
-                                                'Choose a customer',
-                                                style: AppTypography.text(
-                                                  size: 15,
-                                                  color: AppColors.chevron,
-                                                ),
-                                              )
-                                            : Row(
-                                                children: [
-                                                  InitialsAvatar(
-                                                    initials:
-                                                        _customer!.initials,
-                                                    size: 32,
-                                                  ),
-                                                  const SizedBox(width: 10),
-                                                  Flexible(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        Text(
-                                                          _customer!.name,
-                                                          style:
-                                                              AppTypography.text(
-                                                                size: 15,
-                                                                weight:
-                                                                    FontWeight
-                                                                        .w600,
-                                                              ),
-                                                        ),
-                                                        Text(
-                                                          _customer!.phone,
-                                                          style: AppTypography
-                                                              .meta,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                      ),
-                                      AnimatedRotation(
-                                        turns: _custOpen ? 0.5 : 0,
-                                        duration: const Duration(
-                                          milliseconds: 150,
-                                        ),
-                                        child: const AppIcon(
-                                          AppIconGlyph.expand,
-                                          size: 20,
-                                          color: AppColors.muted,
-                                          strokeWidth: 2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            IconButtonSoft(
-                              icon: AppIconGlyph.add,
-                              onTap: _openNewCustomerSheet,
-                              semanticLabel: 'Add new customer',
-                            ),
-                          ],
-                        ),
-                        if (custErr != null) _errorLine(custErr),
-                        if (_custOpen) ...[
-                          const SizedBox(height: 10),
-                          Container(
-                            constraints: const BoxConstraints(maxHeight: 240),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              border: Border.all(color: AppColors.line),
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x14161816),
-                                  blurRadius: 28,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            clipBehavior: Clip.hardEdge,
-                            child: state.customers.isEmpty
-                                ? Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 20,
-                                      horizontal: 16,
-                                    ),
-                                    child: Text(
-                                      'No customers yet. Tap + to add one.',
-                                      textAlign: TextAlign.center,
-                                      style: AppTypography.meta,
-                                    ),
-                                  )
-                                : ListView(
-                                    shrinkWrap: true,
-                                    children: [
-                                      for (final c in state.customers)
-                                        SelectableCustomerRow(
-                                          initials: c.initials,
-                                          name: c.name,
-                                          phone: c.phone,
-                                          selected: c.id == _customer?.id,
-                                          onTap: () => _pickCustomer(c),
-                                        ),
-                                    ],
-                                  ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+                  children: [
+                    _section(
+                      index: 1,
+                      title: 'Customer',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.tr('Select customer'),
+                            style: AppTypography.label,
                           ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  _section(
-                    index: 2,
-                    title: 'Items',
-                    trailing: CountChip('${selectedItems.length} selected'),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AppSearchField(
-                          label: 'Search items',
-                          placeholder: 'Search by item name',
-                          controller: _query,
-                          onFocus: () => setState(() {
-                            _searchOpen = true;
-                            _custOpen = false;
-                          }),
-                          onChanged: (_) => setState(() => _searchOpen = true),
-                          error: itemsErr,
-                        ),
-                        if (_searchOpen) ...[
-                          const SizedBox(height: 10),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              border: Border.all(color: AppColors.line),
-                              borderRadius: BorderRadius.circular(14),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x14161816),
-                                  blurRadius: 28,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            clipBehavior: Clip.hardEdge,
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 10,
-                                  ),
-                                  color: AppColors.surfaceSubtle,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${results.length} item${results.length == 1 ? '' : 's'}',
-                                        style: AppTypography.caption,
-                                      ),
-                                      Text(
-                                        'Tap to select multiple',
-                                        style: AppTypography.caption,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxHeight: 268,
-                                  ),
-                                  child: results.isEmpty
-                                      ? Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            vertical: 24,
-                                            horizontal: 16,
-                                          ),
-                                          child: Text(
-                                            'No items match “${_query.text}”',
-                                            textAlign: TextAlign.center,
-                                            style: AppTypography.meta,
-                                          ),
-                                        )
-                                      : ListView(
-                                          shrinkWrap: true,
-                                          children: [
-                                            for (final item in results)
-                                              SelectableItemRow(
-                                                name: item.name,
-                                                price: item.price,
-                                                unit: item.unit,
-                                                selected: _quantities
-                                                    .containsKey(item.id),
-                                                onTap: () => _toggleItem(item),
-                                              ),
-                                          ],
-                                        ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    14,
-                                    8,
-                                    8,
-                                    8,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        '${selectedItems.length} selected · ${formatMoney(total)}',
-                                        style: AppTypography.text(
-                                          size: 13,
-                                          weight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Pressable(
-                                        onTap: () => setState(() {
-                                          _searchOpen = false;
-                                          _query.clear();
-                                        }),
-                                        child: Container(
-                                          height: 44,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 22,
-                                          ),
-                                          alignment: Alignment.center,
-                                          decoration: BoxDecoration(
-                                            color: AppColors.brand700,
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            'Done',
-                                            style: AppTypography.text(
-                                              size: 14,
-                                              weight: FontWeight.w700,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Text('Selected items', style: AppTypography.label),
-                        const SizedBox(height: 8),
-                        if (selectedItems.isEmpty)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 20,
-                              horizontal: 16,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: AppColors.borderInput,
-                                width: 1.5,
-                                style: BorderStyle.solid,
-                              ),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Column(
-                              children: [
-                                const AppIcon(
-                                  AppIconGlyph.item,
-                                  size: 26,
-                                  color: AppColors.placeholder,
-                                  strokeWidth: 1.7,
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'No items selected yet',
-                                  style: AppTypography.text(
-                                    size: 14,
-                                    weight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Search above and tap items to add them.',
-                                  style: AppTypography.meta,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          )
-                        else
-                          Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.line),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            clipBehavior: Clip.hardEdge,
-                            child: Column(
-                              children: [
-                                for (var i = 0; i < selectedItems.length; i++)
-                                  SelectedItemRow(
-                                    index: i + 1,
-                                    name: selectedItems[i].item.name,
-                                    price: selectedItems[i].item.price,
-                                    unit: selectedItems[i].item.unit,
-                                    quantityController: _qtyController(
-                                      selectedItems[i].item.id,
-                                      selectedItems[i].quantity,
-                                    ),
-                                    onQuantityChanged: (q) => _setQuantity(
-                                      selectedItems[i].item.id,
-                                      q,
-                                    ),
-                                    onRemove: () =>
-                                        _removeItem(selectedItems[i].item.id),
-                                  ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 12,
-                                  ),
-                                  color: AppColors.surfaceSubtle,
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'Items total',
-                                        style: AppTypography.text(
-                                          size: 14,
-                                          weight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Text(
-                                        formatMoney(total),
-                                        style: AppTypography.text(
-                                          size: 16,
-                                          weight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  _section(
-                    index: 3,
-                    title: 'Payment',
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceSubtle,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          const SizedBox(height: 6),
+                          Row(
                             children: [
-                              Text(
-                                'Total items amount',
-                                style: AppTypography.text(
-                                  size: 14,
-                                  weight: FontWeight.w600,
-                                  color: AppColors.ink2,
+                              Expanded(
+                                child: Pressable(
+                                  onTap: () => setState(() {
+                                    _custOpen = !_custOpen;
+                                    _searchOpen = false;
+                                  }),
+                                  child: Container(
+                                    constraints: const BoxConstraints(
+                                      minHeight: 54,
+                                    ),
+                                    padding: const EdgeInsets.only(
+                                      left: 14,
+                                      right: 12,
+                                      top: 8,
+                                      bottom: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      border: Border.all(
+                                        color: custErr != null
+                                            ? AppColors.error
+                                            : AppColors.borderInput,
+                                        width: 1.5,
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                        AppRadius.r12,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: _customer == null
+                                              ? Text(
+                                                  context.tr(
+                                                    'Choose a customer',
+                                                  ),
+                                                  style: AppTypography.text(
+                                                    size: 15,
+                                                    color: AppColors.chevron,
+                                                  ),
+                                                )
+                                              : Row(
+                                                  children: [
+                                                    InitialsAvatar(
+                                                      initials:
+                                                          _customer!.initials,
+                                                      size: 32,
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    Flexible(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Text(
+                                                            _customer!.name,
+                                                            style:
+                                                                AppTypography.text(
+                                                                  size: 15,
+                                                                  weight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                          ),
+                                                          Text(
+                                                            _customer!.phone,
+                                                            style: AppTypography
+                                                                .meta,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                        ),
+                                        AnimatedRotation(
+                                          turns: _custOpen ? 0.5 : 0,
+                                          duration: const Duration(
+                                            milliseconds: 150,
+                                          ),
+                                          child: const AppIcon(
+                                            AppIconGlyph.expand,
+                                            size: 20,
+                                            color: AppColors.muted,
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
-                              Text(
-                                formatMoney(total),
-                                style: AppTypography.text(
-                                  size: 17,
-                                  weight: FontWeight.w700,
-                                ),
+                              const SizedBox(width: 8),
+                              IconButtonSoft(
+                                icon: AppIconGlyph.add,
+                                onTap: _openNewCustomerSheet,
+                                semanticLabel: 'Add new customer',
                               ),
                             ],
                           ),
+                          if (custErr != null) _errorLine(custErr),
+                          if (_custOpen) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              constraints: const BoxConstraints(maxHeight: 240),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                border: Border.all(color: AppColors.line),
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x14161816),
+                                    blurRadius: 28,
+                                    offset: Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              child: state.customers.isEmpty
+                                  ? Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 20,
+                                        horizontal: 16,
+                                      ),
+                                      child: Text(
+                                        context.tr(
+                                          'No customers yet. Tap + to add one.',
+                                        ),
+                                        textAlign: TextAlign.center,
+                                        style: AppTypography.meta,
+                                      ),
+                                    )
+                                  : ListView(
+                                      shrinkWrap: true,
+                                      children: [
+                                        for (final c in state.customers)
+                                          SelectableCustomerRow(
+                                            initials: c.initials,
+                                            name: c.name,
+                                            phone: c.phone,
+                                            selected: c.id == _customer?.id,
+                                            onTap: () => _pickCustomer(c),
+                                          ),
+                                      ],
+                                    ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _section(
+                      index: 2,
+                      title: 'Items',
+                      trailing: CountChip('${selectedItems.length} selected'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppSearchField(
+                            label: 'Search items',
+                            placeholder: 'Search by item name',
+                            controller: _query,
+                            onFocus: () => setState(() {
+                              _searchOpen = true;
+                              _custOpen = false;
+                            }),
+                            onChanged: (_) =>
+                                setState(() => _searchOpen = true),
+                            error: itemsErr,
+                          ),
+                          if (_searchOpen) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                border: Border.all(color: AppColors.line),
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x14161816),
+                                    blurRadius: 28,
+                                    offset: Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              child: Column(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
+                                    color: AppColors.surfaceSubtle,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          (results.length == 1
+                                              ? '1 item'
+                                              : '${results.length} items'),
+                                          style: AppTypography.caption,
+                                        ),
+                                        Text(
+                                          context.tr('Tap to select multiple'),
+                                          style: AppTypography.caption,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  ConstrainedBox(
+                                    constraints: const BoxConstraints(
+                                      maxHeight: 268,
+                                    ),
+                                    child: results.isEmpty
+                                        ? Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 24,
+                                              horizontal: 16,
+                                            ),
+                                            child: Text(
+                                              context.tr(
+                                                'No items match “${_query.text}”',
+                                              ),
+                                              textAlign: TextAlign.center,
+                                              style: AppTypography.meta,
+                                            ),
+                                          )
+                                        : ListView(
+                                            shrinkWrap: true,
+                                            children: [
+                                              for (final item in results)
+                                                SelectableItemRow(
+                                                  name: item.name,
+                                                  price: item.price,
+                                                  unit: item.unit,
+                                                  selected: _quantities
+                                                      .containsKey(item.id),
+                                                  onTap: () =>
+                                                      _toggleItem(item),
+                                                ),
+                                            ],
+                                          ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      14,
+                                      8,
+                                      8,
+                                      8,
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          context.tr(
+                                            '${selectedItems.length} selected · ${formatMoney(total)}',
+                                          ),
+                                          style: AppTypography.text(
+                                            size: 13,
+                                            weight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Pressable(
+                                          onTap: () => setState(() {
+                                            _searchOpen = false;
+                                            _query.clear();
+                                          }),
+                                          child: Container(
+                                            height: 44,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 22,
+                                            ),
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.brand700,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              context.tr('Done'),
+                                              style: AppTypography.text(
+                                                size: 14,
+                                                weight: FontWeight.w700,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          Text(
+                            context.tr('Selected items'),
+                            style: AppTypography.label,
+                          ),
+                          const SizedBox(height: 8),
+                          if (selectedItems.isEmpty)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 20,
+                                horizontal: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: AppColors.borderInput,
+                                  width: 1.5,
+                                  style: BorderStyle.solid,
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Column(
+                                children: [
+                                  const AppIcon(
+                                    AppIconGlyph.item,
+                                    size: 26,
+                                    color: AppColors.placeholder,
+                                    strokeWidth: 1.7,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    context.tr('No items selected yet'),
+                                    style: AppTypography.text(
+                                      size: 14,
+                                      weight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    context.tr(
+                                      'Search above and tap items to add them.',
+                                    ),
+                                    style: AppTypography.meta,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(color: AppColors.line),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              clipBehavior: Clip.hardEdge,
+                              child: Column(
+                                children: [
+                                  for (var i = 0; i < selectedItems.length; i++)
+                                    SelectedItemRow(
+                                      index: i + 1,
+                                      name: selectedItems[i].item.name,
+                                      price: selectedItems[i].item.price,
+                                      unit: selectedItems[i].item.unit,
+                                      quantityController: _qtyController(
+                                        selectedItems[i].item.id,
+                                        selectedItems[i].quantity,
+                                      ),
+                                      onQuantityChanged: (q) => _setQuantity(
+                                        selectedItems[i].item.id,
+                                        q,
+                                      ),
+                                      onRemove: () =>
+                                          _removeItem(selectedItems[i].item.id),
+                                    ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
+                                    ),
+                                    color: AppColors.surfaceSubtle,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          context.tr('Items total'),
+                                          style: AppTypography.text(
+                                            size: 14,
+                                            weight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        Text(
+                                          formatMoney(total),
+                                          style: AppTypography.text(
+                                            size: 16,
+                                            weight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _section(
+                      index: 3,
+                      title: 'Payment',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceSubtle,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  context.tr('Total items amount'),
+                                  style: AppTypography.text(
+                                    size: 14,
+                                    weight: FontWeight.w600,
+                                    color: AppColors.ink2,
+                                  ),
+                                ),
+                                Text(
+                                  formatMoney(total),
+                                  style: AppTypography.text(
+                                    size: 17,
+                                    weight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          MoneyField(
+                            label: 'Discount',
+                            controller: _discount,
+                            onChanged: (_) => setState(() {}),
+                          ),
+                          const SizedBox(height: 14),
+                          MoneyField(
+                            label: 'Paid amount',
+                            controller: _paid,
+                            onChanged: (_) => setState(() {}),
+                          ),
+                          if (payErr != null) _errorLine(payErr),
+                          const SizedBox(height: 8),
+                          const Divider(height: 1, color: AppColors.divider),
+                          const SizedBox(height: 14),
+                          ComputedField(
+                            label: 'Remaining amount',
+                            value: remText,
+                            valueColor: remColor,
+                            helper:
+                                'Auto-calculated: Total items amount − Discount − Paid amount',
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  12,
+                  16,
+                  26 + MediaQuery.paddingOf(context).bottom,
+                ),
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  border: Border(top: BorderSide(color: AppColors.line)),
+                ),
+                child: Row(
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          context.tr('Remaining'),
+                          style: AppTypography.text(
+                            size: 12,
+                            weight: FontWeight.w600,
+                            color: AppColors.muted,
+                          ),
                         ),
-                        const SizedBox(height: 14),
-                        MoneyField(
-                          label: 'Discount',
-                          controller: _discount,
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: 14),
-                        MoneyField(
-                          label: 'Paid amount',
-                          controller: _paid,
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        if (payErr != null) _errorLine(payErr),
-                        const SizedBox(height: 8),
-                        const Divider(height: 1, color: AppColors.divider),
-                        const SizedBox(height: 14),
-                        ComputedField(
-                          label: 'Remaining amount',
-                          value: remText,
-                          valueColor: remColor,
-                          helper:
-                              'Auto-calculated: Total items amount − Discount − Paid amount',
+                        Text(
+                          remText,
+                          style: AppTypography.text(
+                            size: 18,
+                            weight: FontWeight.w700,
+                            color: remColor,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                12,
-                16,
-                26 + MediaQuery.paddingOf(context).bottom,
-              ),
-              decoration: const BoxDecoration(
-                color: AppColors.surface,
-                border: Border(top: BorderSide(color: AppColors.line)),
-              ),
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Remaining',
-                        style: AppTypography.text(
-                          size: 12,
-                          weight: FontWeight.w600,
-                          color: AppColors.muted,
-                        ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SecondaryButton(
+                        label: 'Save & Share',
+                        compact: true,
+                        onTap: _saving ? null : () => _save(state, share: true),
                       ),
-                      Text(
-                        remText,
-                        style: AppTypography.text(
-                          size: 18,
-                          weight: FontWeight.w700,
-                          color: remColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: PrimaryButton(
-                      label: 'Save Khata',
-                      onTap: () => _save(state),
-                      loading: _saving,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: PrimaryButton(
+                        label: 'Save Khata',
+                        compact: true,
+                        onTap: () => _save(state),
+                        loading: _saving,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _errorLine(String message) => Padding(
@@ -786,7 +847,7 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
         const SizedBox(width: 6),
         Expanded(
           child: Text(
-            message,
+            context.tr(message),
             style: AppTypography.text(
               size: 13,
               weight: FontWeight.w500,
@@ -834,7 +895,7 @@ class _AddKhataScreenState extends State<AddKhataScreen> {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    title,
+                    context.tr(title),
                     style: AppTypography.text(
                       size: 16,
                       weight: FontWeight.w700,

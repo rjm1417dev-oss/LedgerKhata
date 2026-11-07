@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -94,7 +95,7 @@ class _ToastWidgetState extends State<_ToastWidget> {
                   const SizedBox(width: 10),
                   Flexible(
                     child: Text(
-                      widget.message,
+                      context.tr(widget.message),
                       style: AppTypography.text(
                         size: 14,
                         weight: FontWeight.w600,

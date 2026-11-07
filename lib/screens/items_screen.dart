@@ -41,7 +41,9 @@ class ItemsScreen extends StatelessWidget {
     final usage = state.khataUsageCountForItem(item.id);
     final message = usage == 0
         ? 'This can’t be undone.'
-        : 'Used in ${usage == 1 ? '1 khata' : '$usage khatas'} — those records keep "${item.name}"\'s name, price and unit. This can’t be undone.';
+        : usage == 1
+        ? 'Used in 1 khata — that record keeps "${item.name}"\'s name, price and unit. This can’t be undone.'
+        : 'Used in $usage khatas — those records keep "${item.name}"\'s name, price and unit. This can’t be undone.';
     final confirmed = await showAppConfirmDialog(
       context: context,
       title: 'Delete ${item.name}?',
@@ -68,9 +70,9 @@ class ItemsScreen extends StatelessWidget {
           ScreenHeader(
             businessName: business?.name ?? '',
             title: 'Items',
-            trailing: PrimaryButtonSmall(
-              label: 'Add',
-              icon: AppIconGlyph.add,
+            trailing: CircleActionButton(
+              icon: AppIconGlyph.itemAdd,
+              semanticLabel: 'Add item',
               onTap: () => _openAddSheet(context),
             ),
           ),
@@ -88,7 +90,9 @@ class ItemsScreen extends StatelessWidget {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     children: [
                       Text(
-                        '${items.length} item${items.length == 1 ? '' : 's'}',
+                        (items.length == 1
+                            ? '1 item'
+                            : '${items.length} items'),
                         style: AppTypography.caption,
                       ),
                       const SizedBox(height: 10),

@@ -1,20 +1,47 @@
 import 'package:flutter/foundation.dart';
 
 import '../data/khata_repository.dart';
+import '../l10n/translator.dart';
 import '../models/business.dart';
 import '../models/customer.dart';
 import '../models/item.dart';
 import '../models/khata.dart';
+import '../models/ledger.dart';
+import '../services/whatsapp.dart';
 
 enum AppStatus { starting, signedOut, ready, loadFailed }
 
 /// Source of truth for the UI. Reads and writes go through [KhataRepository]
 /// (Supabase in the app); this class keeps the loaded lists for the screens.
+/// Remembers the chosen language between launches.
+abstract class LanguageStore {
+  Future<AppLanguage> load();
+  Future<void> save(AppLanguage language);
+}
+
 class AppState extends ChangeNotifier {
   final KhataRepository _repo;
   final Duration splashMinimum;
+  final LanguageStore? _languageStore;
 
-  AppState(this._repo, {this.splashMinimum = const Duration(milliseconds: 1200)});
+  AppState(
+    this._repo, {
+    this.splashMinimum = const Duration(milliseconds: 1200),
+    LanguageStore? languageStore,
+  }) : _languageStore = languageStore;
+
+  AppLanguage _language = AppLanguage.english;
+
+  /// Language of the redesigned ledger screen (English until the user picks).
+  AppLanguage get language => _language;
+
+  Future<void> setLanguage(AppLanguage language) async {
+    if (language == _language) return;
+    _language = language;
+    AppLocale.language = language;
+    notifyListeners();
+    await _languageStore?.save(language);
+  }
 
   AppStatus _status = AppStatus.starting;
   String? _loadError;
@@ -39,6 +66,11 @@ class AppState extends ChangeNotifier {
   /// Shows the splash for at least [splashMinimum] while the saved session
   /// (if any) is restored.
   Future<void> start() async {
+    final stored = await _languageStore?.load();
+    if (stored != null) {
+      _language = stored;
+      AppLocale.language = stored;
+    }
     await Future.wait([Future<void>.delayed(splashMinimum), _restoreSession()]);
     notifyListeners();
   }
@@ -147,8 +179,14 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> uploadBusinessLogo({required Uint8List bytes, required String fileExtension}) async {
-    final url = await _repo.uploadBusinessLogo(bytes: bytes, fileExtension: fileExtension);
+  Future<void> uploadBusinessLogo({
+    required Uint8List bytes,
+    required String fileExtension,
+  }) async {
+    final url = await _repo.uploadBusinessLogo(
+      bytes: bytes,
+      fileExtension: fileExtension,
+    );
     final b = _business;
     if (b != null) {
       _business = Business(
@@ -163,16 +201,30 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<Customer> addCustomer({required String name, required String phone}) async {
+  Future<Customer> addCustomer({
+    required String name,
+    required String phone,
+  }) async {
     final customer = await _repo.addCustomer(name: name, phone: phone);
     _customers = [..._customers, customer];
     notifyListeners();
     return customer;
   }
 
-  Future<Customer> updateCustomer({required String id, required String name, required String phone}) async {
-    final customer = await _repo.updateCustomer(id: id, name: name, phone: phone);
-    _customers = [for (final c in _customers) if (c.id == id) customer else c];
+  Future<Customer> updateCustomer({
+    required String id,
+    required String name,
+    required String phone,
+  }) async {
+    final customer = await _repo.updateCustomer(
+      id: id,
+      name: name,
+      phone: phone,
+    );
+    _customers = [
+      for (final c in _customers)
+        if (c.id == id) customer else c,
+    ];
     notifyListeners();
     return customer;
   }
@@ -183,16 +235,33 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Item> addItem({required String name, required double price, required String unit}) async {
+  Future<Item> addItem({
+    required String name,
+    required double price,
+    required String unit,
+  }) async {
     final item = await _repo.addItem(name: name, price: price, unit: unit);
     _items = [..._items, item];
     notifyListeners();
     return item;
   }
 
-  Future<Item> updateItem({required String id, required String name, required double price, required String unit}) async {
-    final item = await _repo.updateItem(id: id, name: name, price: price, unit: unit);
-    _items = [for (final i in _items) if (i.id == id) item else i];
+  Future<Item> updateItem({
+    required String id,
+    required String name,
+    required double price,
+    required String unit,
+  }) async {
+    final item = await _repo.updateItem(
+      id: id,
+      name: name,
+      price: price,
+      unit: unit,
+    );
+    _items = [
+      for (final i in _items)
+        if (i.id == id) item else i,
+    ];
     notifyListeners();
     return item;
   }
@@ -204,45 +273,104 @@ class AppState extends ChangeNotifier {
   }
 
   /// How many saved khatas mention this customer — used to block/inform on delete.
-  int khataCountForCustomer(String customerId) => _khatas.where((k) => k.customerId == customerId).length;
+  int khataCountForCustomer(String customerId) =>
+      _khatas.where((k) => k.customerId == customerId).length;
 
   /// How many saved khatas include this item — informational, since deleting
   /// an item never touches those khatas' saved name/price/unit.
-  int khataUsageCountForItem(String itemId) => _khatas.where((k) => k.items.any((l) => l.itemId == itemId)).length;
+  int khataUsageCountForItem(String itemId) =>
+      _khatas.where((k) => k.items.any((l) => l.itemId == itemId)).length;
 
-  Future<void> addKhata({
+  /// Saves a purchase and returns what was just recorded, so the shopkeeper
+  /// can send exactly that entry to the customer.
+  Future<KhataEntry> addKhata({
     required Customer customer,
     required List<SelectedKhataItem> selectedItems,
     required double discount,
     required double paid,
   }) async {
+    final before = khatasForCustomer(customer.id);
+    final openBefore = before.where((k) => !k.isSettled).firstOrNull;
+    final knownIds = before.map((k) => k.id).toSet();
     await _repo.createKhata(
       customerId: customer.id,
-      items: selectedItems.map((s) => KhataItemSelection(itemId: s.item.id, quantity: s.quantity)).toList(),
+      items: selectedItems
+          .map(
+            (s) => KhataItemSelection(itemId: s.item.id, quantity: s.quantity),
+          )
+          .toList(),
       discount: discount,
       paid: paid,
     );
     _khatas = await _repo.fetchKhatas();
     notifyListeners();
+
+    // The entry lands on the customer's open cycle, or starts a new one.
+    final after = khatasForCustomer(customer.id);
+    final khata =
+        after.where((k) => k.id == openBefore?.id).firstOrNull ??
+        after.where((k) => !knownIds.contains(k.id)).firstOrNull ??
+        after.first;
+    // Use the time the server actually stamped on this purchase.
+    final saved = khata.effectivePurchases.lastOrNull;
+    final now = saved?.date ?? DateTime.now();
+    return KhataEntry(
+      customer: customer,
+      khata: khata,
+      lines: [
+        for (final s in selectedItems)
+          KhataLineItem(
+            itemId: s.item.id,
+            name: s.item.name,
+            price: s.item.price,
+            quantity: s.quantity,
+            unit: s.item.unit,
+            date: now,
+            purchaseId: saved?.id ?? '',
+          ),
+      ],
+      discount: discount,
+      paid: paid,
+      date: now,
+    );
   }
 
-  Future<void> recordCustomerPayment({required String customerId, required double amount}) async {
-    await _repo.recordCustomerPayment(customerId: customerId, amount: amount);
+  Future<void> recordCustomerPayment({
+    required String customerId,
+    required double amount,
+    String? method,
+  }) async {
+    await _repo.recordCustomerPayment(
+      customerId: customerId,
+      amount: amount,
+      method: method,
+    );
     _khatas = await _repo.fetchKhatas();
     notifyListeners();
   }
+
+  /// Every purchase and payment this customer made, oldest first, each with
+  /// the balance owed right after it.
+  List<LedgerEntry> ledgerForCustomer(String customerId) =>
+      buildCustomerLedger(khatasForCustomer(customerId));
 
   List<Khata> khatasForCustomer(String customerId) =>
       _khatas.where((k) => k.customerId == customerId).toList();
 
   /// What a customer still owes across all their khatas (never negative).
-  double outstandingForCustomer(String customerId) =>
-      khatasForCustomer(customerId).fold(0.0, (a, k) => a + (k.remaining > 0 ? k.remaining : 0));
+  double outstandingForCustomer(String customerId) => khatasForCustomer(
+    customerId,
+  ).fold(0.0, (a, k) => a + (k.remaining > 0 ? k.remaining : 0));
 
   /// Customers with an unpaid balance, largest first.
   List<Customer> get customersWithOutstanding {
-    final owing = _customers.where((c) => outstandingForCustomer(c.id) > 0).toList();
-    owing.sort((a, b) => outstandingForCustomer(b.id).compareTo(outstandingForCustomer(a.id)));
+    final owing = _customers
+        .where((c) => outstandingForCustomer(c.id) > 0)
+        .toList();
+    owing.sort(
+      (a, b) =>
+          outstandingForCustomer(b.id).compareTo(outstandingForCustomer(a.id)),
+    );
     return owing;
   }
 
@@ -250,7 +378,8 @@ class AppState extends ChangeNotifier {
   double get totalBilled => _khatas.fold(0.0, (a, k) => a + k.total);
   double get totalDiscount => _khatas.fold(0.0, (a, k) => a + k.discount);
   double get totalReceived => _khatas.fold(0.0, (a, k) => a + k.paid);
-  double get totalRemaining => _khatas.fold(0.0, (a, k) => a + (k.remaining > 0 ? k.remaining : 0));
+  double get totalRemaining =>
+      _khatas.fold(0.0, (a, k) => a + (k.remaining > 0 ? k.remaining : 0));
   int get pendingKhataCount => _khatas.where((k) => !k.isSettled).length;
   List<Khata> get recentKhatas => _khatas.take(3).toList();
 }

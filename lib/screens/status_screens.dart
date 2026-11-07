@@ -1,3 +1,4 @@
+import '../l10n/translator.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
@@ -50,7 +51,7 @@ class _StatusLayout extends StatelessWidget {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      title,
+                      context.tr(title),
                       style: AppTypography.display(
                         size: 26,
                         weight: FontWeight.w700,
@@ -81,7 +82,7 @@ class _Step extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 6),
     child: Text(
-      text,
+      context.tr(text),
       style: AppTypography.text(
         size: 14,
         height: 1.5,
@@ -104,7 +105,7 @@ class SetupRequiredScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'The app couldn’t find your Supabase project details.',
+            context.tr('The app couldn’t find your Supabase project details.'),
             style: AppTypography.text(
               size: 15,
               height: 1.5,
@@ -154,7 +155,7 @@ class LoadErrorScreen extends StatelessWidget {
     return _StatusLayout(
       title: 'Couldn’t load your data',
       body: Text(
-        message,
+        context.tr(message),
         style: AppTypography.text(
           size: 15,
           height: 1.5,
